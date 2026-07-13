@@ -162,7 +162,6 @@
         <!-- 导航卡片网格 -->
         <div id="main-nav-grid" class="w-full grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8 relative z-10 items-start">
             
-            <!-- 原有预设推荐区域 -->
             <div id="card-recommend" class="glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300">
                 <h3 class="text-lg font-semibold text-indigo-400 mb-4 flex items-center"><i class="fas fa-star mr-2.5"></i> <span data-i18n="cardRec">常用推荐</span></h3>
                 <div class="grid grid-cols-2 gap-3">
@@ -193,7 +192,6 @@
                     <h3 class="text-lg font-semibold text-pink-400 flex items-center"><i class="fas fa-folder-plus mr-2.5"></i> <span data-i18n="cardCustom">站长推荐</span></h3>
                     <button type="button" onclick="openLinkModal('custom')" class="admin-only text-xs px-2.5 py-1 bg-pink-600/20 text-pink-400 border border-pink-500/20 rounded-lg hover:bg-pink-600/40 transition-colors cursor-pointer z-[50]" data-i18n="addCloud">添加 (云端)</button>
                 </div>
-                <!-- 容器ID保留，通过JS赋予智能伸缩样式 -->
                 <div id="custom-links-container"></div>
                 <div id="expand-action-wrapper" class="mt-4 pt-2 border-t border-slate-500/10 text-center hidden">
                     <button onclick="toggleExpandCustomLinks()" id="expand-btn" class="text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer inline-flex items-center gap-1">
@@ -338,21 +336,30 @@
 
         // --- 2. 拖拽核心控制逻辑 ---
         function handleDragStart(e, type, secId, linkIdx = null) {
+            e.stopPropagation(); // 切断事件冒泡，防止网址拖拽触发整个区域的拖拽
             if (localStorage.getItem('nav_admin_auth') !== 'true') { e.preventDefault(); return; }
             dragType = type; dragSecId = secId; dragLinkIdx = linkIdx;
             e.dataTransfer.effectAllowed = 'move';
-            setTimeout(() => e.target.classList.add('dragging'), 0);
+            const target = e.currentTarget;
+            setTimeout(() => target.classList.add('dragging'), 0);
         }
 
         function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
+            e.stopPropagation(); // 切断事件冒泡
+            e.currentTarget.classList.remove('dragging');
             document.querySelectorAll('.dynamic-section-card, .group').forEach(el => el.style.border = '');
         }
 
-        function handleDragOver(e, type) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
+        function handleDragOver(e, type) { 
+            e.preventDefault(); 
+            e.stopPropagation(); // 切断事件冒泡
+            e.dataTransfer.dropEffect = 'move'; 
+            return false; 
+        }
 
         function handleDrop(e, type, targetSecId, targetLinkIdx = null) {
-            e.stopPropagation(); e.preventDefault();
+            e.stopPropagation(); 
+            e.preventDefault();
             if (localStorage.getItem('nav_admin_auth') !== 'true') return;
 
             let secs = cloudConfig.dynamicSections || [];
@@ -371,14 +378,17 @@
                 const fromSec = secs.find(s => s.id === dragSecId);
                 const toSec = secs.find(s => s.id === targetSecId);
                 if (fromSec && toSec) {
+                    let actualTargetIdx = targetLinkIdx;
+                    // 同区域内往下拖动时，由于前置元素已被抽出，不需要额外处理 index
                     const [movedLink] = fromSec.links.splice(dragLinkIdx, 1);
-                    toSec.links.splice(targetLinkIdx, 0, movedLink);
+                    toSec.links.splice(actualTargetIdx, 0, movedLink);
                 }
             } 
             else if (dragType === 'link' && type === 'section') {
                  const fromSec = secs.find(s => s.id === dragSecId);
                  const toSec = secs.find(s => s.id === targetSecId);
                  if (fromSec && toSec) {
+                     if (fromSec === toSec) return; // 防止在同区域误拖拽导致排到最后
                      const [movedLink] = fromSec.links.splice(dragLinkIdx, 1);
                      toSec.links.push(movedLink);
                  }
@@ -434,7 +444,7 @@
             updateCloudConfig('wallpaper', "");
         }
 
-        // --- 4. 动态自定义区域管理 (升级为同宽缩放内聚模式) ---
+        // --- 4. 动态自定义区域管理 ---
         function saveDynamicSections(sections) {
             localStorage.setItem('nav_dynamic_sections', JSON.stringify(sections));
             updateCloudConfig('dynamicSections', sections);
@@ -494,7 +504,6 @@
                 }
 
                 const card = document.createElement('div');
-                // 永远保持标准的 xl:col-span-1 宽度
                 card.className = "dynamic-section-card glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300 relative xl:col-span-1";
                 card.id = `section-${sec.id}`;
                 card.draggable = true;
@@ -507,7 +516,6 @@
                 if (linkCount === 0) {
                     linksHtml = `<div class="col-span-full text-center text-xs text-slate-400/60 py-4">${t('noCloudLinks')}</div>`;
                 } else {
-                    // 根据模式自适应样式压缩
                     const pClass = isCompact ? 'p-2' : 'p-3';
                     const spaceXClass = isCompact ? 'space-x-1.5' : 'space-x-2.5';
                     const iconSizeClass = isCompact ? 'w-4 h-4 text-[9px]' : 'w-5 h-5 text-[10px]';
@@ -520,7 +528,9 @@
                     visibleLinks.forEach((link, idx) => {
                         const displayName = getLocalizedLinkName(link.name, link.url);
                         let displayIcon = `<div class="${iconSizeClass} rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
-                        try { if(link.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(link.url).hostname}" onerror="this.style.display='none'" class="${imgSizeClass} rounded object-contain shrink-0" alt="icon" />`; } catch(e){}
+                        try { 
+                            if(link.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(link.url).hostname}" draggable="false" onerror="this.style.display='none'" class="${imgSizeClass} rounded object-contain shrink-0" alt="icon" />`; 
+                        } catch(e){}
 
                         linksHtml += `
                         <div class="group relative flex items-center justify-between ${pClass} bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all"
@@ -531,7 +541,8 @@
                              ondrop="handleDrop(event, 'link', '${sec.id}', ${idx})">
                             <div class="flex items-center w-full overflow-hidden">
                                 <i class="fas fa-grip-vertical text-slate-500 opacity-0 group-hover:opacity-50 transition-opacity ${dragMrClass} cursor-move admin-only text-[10px] shrink-0"></i>
-                                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex items-center ${spaceXClass} truncate w-full ${prClass}">
+                                <!-- 增加 draggable="false" 阻止浏览器默认的超链接拖拽 -->
+                                <a href="${link.url}" draggable="false" target="_blank" rel="noopener noreferrer" class="flex items-center ${spaceXClass} truncate w-full ${prClass}">
                                     ${displayIcon} <span class="${textSizeClass} font-medium truncate">${displayName}</span>
                                 </a>
                             </div>
@@ -626,7 +637,7 @@
         function toggleEngineMenu(e) { e.stopPropagation(); document.getElementById('engine-menu').classList.toggle('hidden'); }
         function selectEngine(key) { currentEngineKey = key; const form = document.getElementById('search-form'); const input = document.getElementById('search-input'); const icon = document.getElementById('engine-icon'); form.action = engines[key].action; input.name = engines[key].name; input.setAttribute('data-i18n-placeholder', engines[key].placeholderKey); input.placeholder = t(engines[key].placeholderKey); icon.className = engines[key].icon; document.getElementById('engine-menu').classList.add('hidden'); }
 
-        // --- 8. 原站长推荐 (应用同样的等宽压缩逻辑) ---
+        // --- 8. 原站长推荐 ---
         function openLinkModal(target) { currentModalTarget = target; const textEl = document.getElementById('modal-title-text'); if(target === 'friend') textEl.innerText = t('modalAddFriend'); else if(target === 'custom') textEl.innerText = t('modalAddCloud'); else textEl.innerText = t('modalAddSection'); toggleModal(true); }
         function toggleModal(show) { const modal = document.getElementById('modal'); if (show) { document.getElementById('site-name').value = ''; document.getElementById('site-url').value = ''; modal.classList.remove('hidden'); } else { modal.classList.add('hidden'); } }
         function closeModalOnBlank(e) { if(e.target.id === 'modal') toggleModal(false); }
@@ -665,29 +676,21 @@
 
             let visibleLinks = links;
             let showExpandBtn = false;
-            
-            if (links.length > 9) {
-                showExpandBtn = true;
-                if (!isCustomLinksExpanded) visibleLinks = links.slice(0, 9);
-            }
+            if (links.length > 9) { showExpandBtn = true; if (!isCustomLinksExpanded) visibleLinks = links.slice(0, 9); }
 
-            const pClass = isCompact ? 'p-2' : 'p-3';
-            const spaceXClass = isCompact ? 'space-x-1.5' : 'space-x-2.5';
-            const iconSizeClass = isCompact ? 'w-4 h-4 text-[9px]' : 'w-5 h-5 text-[10px]';
-            const imgSizeClass = isCompact ? 'w-4 h-4' : 'w-5 h-5';
-            const textSizeClass = isCompact ? 'text-[11px]' : 'text-sm';
-            const prClass = isCompact ? 'pr-4' : 'pr-5';
-            const btnClass = isCompact ? 'right-1 text-[10px] px-1 py-0.5' : 'right-2 text-xs p-1';
+            const pClass = isCompact ? 'p-2' : 'p-3'; const spaceXClass = isCompact ? 'space-x-1.5' : 'space-x-2.5';
+            const iconSizeClass = isCompact ? 'w-4 h-4 text-[9px]' : 'w-5 h-5 text-[10px]'; const imgSizeClass = isCompact ? 'w-4 h-4' : 'w-5 h-5';
+            const textSizeClass = isCompact ? 'text-[11px]' : 'text-sm'; const prClass = isCompact ? 'pr-4' : 'pr-5'; const btnClass = isCompact ? 'right-1 text-[10px] px-1 py-0.5' : 'right-2 text-xs p-1';
 
             visibleLinks.forEach((item, index) => {
                 const displayName = getLocalizedLinkName(item.name, item.url);
                 let displayIcon = `<div class="${iconSizeClass} rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
-                try { if(item.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(item.url).hostname}" onerror="this.style.display='none'" class="${imgSizeClass} rounded object-contain shrink-0" alt="icon" />`; } catch(err){}
+                try { if(item.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(item.url).hostname}" draggable="false" onerror="this.style.display='none'" class="${imgSizeClass} rounded object-contain shrink-0" alt="icon" />`; } catch(err){}
                 
                 container.innerHTML += `
                     <div class="group relative flex items-center justify-between ${pClass} bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all">
                         <div class="flex items-center w-full overflow-hidden">
-                            <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="flex items-center ${spaceXClass} truncate w-full ${prClass}">
+                            <a href="${item.url}" draggable="false" target="_blank" rel="noopener noreferrer" class="flex items-center ${spaceXClass} truncate w-full ${prClass}">
                                 ${displayIcon} <span class="${textSizeClass} font-medium truncate">${displayName}</span>
                             </a>
                         </div>
@@ -696,8 +699,7 @@
             });
 
             if (showExpandBtn) { 
-                actionWrapper.classList.remove('hidden'); 
-                const btn = document.getElementById('expand-btn'); 
+                actionWrapper.classList.remove('hidden'); const btn = document.getElementById('expand-btn'); 
                 btn.innerHTML = isCustomLinksExpanded ? `<span data-i18n="collapseMore">${t('collapseMore')}</span> <i class="fas fa-chevron-up text-[10px]"></i>` : `<span data-i18n="expandMore">${t('expandMore')}</span> (${links.length - 9}) <i class="fas fa-chevron-down text-[10px]"></i>`; 
             } else { actionWrapper.classList.add('hidden'); }
         }
@@ -712,7 +714,7 @@
                 const displayName = getLocalizedLinkName(item.name, item.url);
                 container.innerHTML += `
                     <div class="group relative flex items-center justify-between p-2.5 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-emerald-600/10 transition-all text-center">
-                        <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="w-full text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors truncate px-2">${displayName}</a>
+                        <a href="${item.url}" draggable="false" target="_blank" rel="noopener noreferrer" class="w-full text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors truncate px-2">${displayName}</a>
                         <button type="button" onclick="deleteFriendLink(event, ${index})" class="admin-only absolute right-1 text-[10px] text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-500/10 px-1 rounded cursor-pointer"><i class="fas fa-times"></i></button>
                     </div>`;
             });
