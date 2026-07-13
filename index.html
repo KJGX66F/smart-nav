@@ -67,9 +67,15 @@
             z-index: -1;
         }
 
-        /* 全局过渡动画与网格平滑过渡支持 */
+        /* 全局过渡动画与拖拽交互支持 */
         body, .glass-card, .glass-input, #custom-links-container {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dragging {
+            opacity: 0.4;
+            transform: scale(0.98);
+            border: 2px dashed #6366f1 !important;
         }
 
         /* 管理员权限控制类：默认非管理员隐藏编辑元素 */
@@ -86,21 +92,18 @@
             <i id="theme-icon" class="fas fa-palette text-sm"></i>
         </button>
         <div id="theme-panel" class="absolute right-0 top-full mt-2 w-60 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl hidden backdrop-blur-md p-4 space-y-3 z-[160]" onclick="event.stopPropagation()">
-            <!-- 语言切换 -->
             <div class="text-[11px] font-bold text-slate-400 px-1 mb-1.5" data-i18n="langTitle">语言 / Language</div>
             <div class="flex gap-2 mb-3 border-b border-slate-800 pb-3">
                 <button onclick="setLanguage('zh')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer">中文</button>
                 <button onclick="setLanguage('en')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer">English</button>
             </div>
 
-            <!-- 主题切换 -->
             <div class="text-[11px] font-bold text-slate-400 px-1" data-i18n="themeTitle">基础色彩模式 (本地偏好)</div>
             <div class="flex gap-2">
                 <button onclick="setBaseTheme('theme-light')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-sun text-amber-500"></i> <span data-i18n="themeLight">日间</span></button>
                 <button onclick="setBaseTheme('theme-dark')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-moon text-indigo-400"></i> <span data-i18n="themeDark">夜间</span></button>
             </div>
             
-            <!-- 壁纸设置 (管理员，连接至云端/api/config) -->
             <div class="admin-only space-y-1.5 px-1 border-t border-slate-800 pt-3 mt-1">
                 <div class="flex justify-between items-center">
                     <label class="text-[11px] text-slate-400 font-bold" data-i18n="bgTitle">自定义背景 (全站同步)</label>
@@ -112,7 +115,6 @@
                 </div>
             </div>
 
-            <!-- 退出管理 -->
             <div class="admin-only border-t border-slate-800 pt-2 mt-1">
                 <button onclick="logoutAdmin()" class="w-full py-1 rounded-lg bg-red-950/40 border border-red-900/40 text-red-400 text-[11px] text-center hover:bg-red-900/40 transition-colors cursor-pointer" data-i18n="logoutBtn">退出后台管理</button>
             </div>
@@ -137,7 +139,6 @@
         <div class="w-full max-w-2xl mb-16 relative z-[100]">
             <form id="search-form" action="https://www.google.com/search" method="get" target="_blank" rel="noopener noreferrer" class="relative">
                 <div class="flex items-center glass-input rounded-2xl border border-slate-700/40 shadow-2xl focus-within:border-indigo-500/80 transition-all duration-300">
-                    
                     <div class="relative pl-4">
                         <button type="button" aria-label="切换搜索引擎" id="engine-btn" onclick="toggleEngineMenu(event)" class="flex items-center space-x-2 text-slate-400 hover:text-indigo-400 transition-colors py-4 pr-2 cursor-pointer">
                             <i id="engine-icon" class="fab fa-google text-blue-400"></i>
@@ -150,7 +151,6 @@
                             <button type="button" onclick="selectEngine('github')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fab fa-github text-slate-400"></i> <span>GitHub</span></button>
                         </div>
                     </div>
-
                     <input type="text" id="search-input" name="q" data-i18n-placeholder="searchGoogle" placeholder="在 Google 中搜索..." autocomplete="off" class="w-full bg-transparent border-none py-4 px-3 focus:outline-none focus:ring-0 text-base">
                     <button type="submit" aria-label="搜索" class="mr-3 p-2.5 text-slate-400 hover:text-indigo-400 transition-colors">
                         <i class="fas fa-search text-lg"></i>
@@ -191,8 +191,7 @@
                     <h3 class="text-lg font-semibold text-pink-400 flex items-center"><i class="fas fa-folder-plus mr-2.5"></i> <span data-i18n="cardCustom">站长推荐</span></h3>
                     <button type="button" onclick="openLinkModal('custom')" class="admin-only text-xs px-2.5 py-1 bg-pink-600/20 text-pink-400 border border-pink-500/20 rounded-lg hover:bg-pink-600/40 transition-colors cursor-pointer z-[50]" data-i18n="addCloud">添加 (云端)</button>
                 </div>
-                <div id="custom-links-container" class="grid grid-cols-2 gap-3">
-                </div>
+                <div id="custom-links-container" class="grid grid-cols-2 gap-3"></div>
                 <div id="expand-action-wrapper" class="mt-4 pt-2 border-t border-slate-500/10 text-center hidden">
                     <button onclick="toggleExpandCustomLinks()" id="expand-btn" class="text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer inline-flex items-center gap-1">
                         <span data-i18n="expandMore">展开显示更多</span> <i class="fas fa-chevron-down text-[10px]"></i>
@@ -200,7 +199,7 @@
                 </div>
             </div>
 
-            <!-- 【新增】添加动态分类按钮 (管理员可见) -->
+            <!-- 添加动态分类按钮 (管理员可见) -->
             <div id="add-section-card" class="admin-only glass-card rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500/50 transition-all border-dashed border-2 border-slate-500/30" onclick="addCustomSection()" style="min-height: 180px;">
                 <i class="fas fa-plus text-3xl text-slate-400 mb-2"></i>
                 <span class="text-sm font-medium text-slate-400 mt-1" data-i18n="addSectionBtn">添加自定义区域</span>
@@ -214,8 +213,7 @@
                     <h3 class="text-base font-semibold text-emerald-400 flex items-center"><i class="fas fa-handshake mr-2.5"></i> <span data-i18n="cardFriend">友情链接</span></h3>
                     <button type="button" onclick="openLinkModal('friend')" class="admin-only text-xs px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-600/40 transition-colors cursor-pointer z-[50]" data-i18n="addLocal">添加 (本地)</button>
                 </div>
-                <div id="friend-links-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-                </div>
+                <div id="friend-links-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3"></div>
             </div>
         </div>
 
@@ -246,70 +244,53 @@
     </div>
 
     <script>
-        // --- 0. 全局状态与配置字典 ---
+        // --- 0. 全局状态与配置 ---
         let currentLang = localStorage.getItem('nav_lang') || 'zh';
         let isCustomLinksExpanded = false;
         let currentModalTarget = 'custom'; 
         let currentEngineKey = 'google';
         
-        // 全局云端配置中心（整合了壁纸和自定义区域）
         let cloudConfig = { wallpaper: "", dynamicSections: [] };
+
+        // 拖拽控制状态
+        let dragType = null; 
+        let dragSecId = null; 
+        let dragLinkIdx = null;
 
         const i18n = {
             zh: {
                 pageTitle: "科技共享-智能多功能响应式导航",
-                langTitle: "语言 / Language",
-                themeTitle: "基础色彩模式 (本地偏好)",
-                themeLight: "日间", themeDark: "夜间",
-                bgTitle: "自定义背景 (全站同步)", bgInputPlace: "输入图片网址 https://...",
-                applyBtn: "应用", clearBg: "清除壁纸", logoutBtn: "退出后台管理",
-                weatherLoading: "正在定位测算天气...",
-                enGoogle: "谷歌 Google", enBing: "必应 Bing", enBaidu: "百度 Baidu",
-                searchGoogle: "在 Google 中搜索...", searchBing: "在 必应 Bing 中搜索...", searchBaidu: "在 百度 Baidu 中搜索...", searchGithub: "在 GitHub 中搜索仓库...",
+                langTitle: "语言 / Language", themeTitle: "基础色彩模式 (本地偏好)",
+                themeLight: "日间", themeDark: "夜间", bgTitle: "自定义背景 (全站同步)", bgInputPlace: "输入图片网址 https://...",
+                applyBtn: "应用", clearBg: "清除壁纸", logoutBtn: "退出后台管理", weatherLoading: "正在定位测算天气...",
+                enGoogle: "谷歌 Google", enBing: "必应 Bing", enBaidu: "百度 Baidu", searchGoogle: "在 Google 中搜索...", searchBing: "在 必应 Bing 中搜索...", searchBaidu: "在 百度 Baidu 中搜索...", searchGithub: "在 GitHub 中搜索仓库...",
                 cardRec: "常用推荐", cardDev: "效率与开发", cardCustom: "站长推荐", cardFriend: "友情链接",
                 linkBlog: "科技共享博客", linkBili: "哔哩哔哩", linkZhihu: "知乎", linkWeibo: "微博", linkJuejin: "稀土掘金",
-                addCloud: "添加 (云端)", addLocal: "添加 (本地)",
-                expandMore: "展开显示更多", collapseMore: "收起部分站点",
+                addCloud: "添加 (云端)", addLocal: "添加 (本地)", expandMore: "展开显示更多", collapseMore: "收起部分站点",
                 footerText: "&copy; 2026 科技共享-智能生态导航 · Powered by Cloudflare", adminBadge: "已登入",
-                modalAddCloud: "添加云端站长推荐", modalAddFriend: "添加友情链接",
-                siteName: "网站名称", siteNamePlace: "例如：百度", siteUrl: "网站网址 (URL)",
-                btnCancel: "取消", btnSave: "保存站点",
-                noCloudLinks: "暂无自定义链接", loadingCloud: "正在从云端加载...",
-                delConfirm: "确定要删除这个云端链接吗？", pwdPrompt: "🔐 请输入后台管理员安全密码：", pwdSuccess: "🎉 认证成功！管理功能已全部解锁。", pwdFail: "❌ 密码错误，鉴权失败！", logoutMsg: "🔒 已安全退出管理后台，页面回归只读状态。",
-                weatherCloudy: "多云", weatherClear: "晴朗", weatherRain: "阵雨", weatherSnow: "降雪", weatherThunder: "雷阵雨", weatherDefault: "风调雨顺 · 晴",
-                validUrlMsg: "提示：请输入有效的网址！",
-                // 新增动态区域的翻译
-                addSectionBtn: "添加自定义区域",
-                promptSectionName: "请输入新区域的名称 (例如：AI工具)：",
-                delSectionConfirm: "确定要删除整个区域及其所有链接吗？",
-                modalAddSection: "添加到自定义区域"
+                modalAddCloud: "添加云端站长推荐", modalAddFriend: "添加友情链接", siteName: "网站名称", siteNamePlace: "例如：百度", siteUrl: "网站网址 (URL)",
+                btnCancel: "取消", btnSave: "保存站点", noCloudLinks: "暂无自定义链接", loadingCloud: "正在从云端加载...",
+                delConfirm: "确定要删除这个链接吗？", pwdPrompt: "🔐 请输入后台管理员安全密码：", pwdSuccess: "🎉 认证成功！管理功能已全部解锁。", pwdFail: "❌ 密码错误，鉴权失败！", logoutMsg: "🔒 已安全退出管理后台，页面回归只读状态。",
+                weatherCloudy: "多云", weatherClear: "晴朗", weatherRain: "阵雨", weatherSnow: "降雪", weatherThunder: "雷阵雨", weatherDefault: "风调雨顺 · 晴", validUrlMsg: "提示：请输入有效的网址！",
+                addSectionBtn: "添加自定义区域", promptSectionName: "请输入新区域的名称 (例如：AI工具)：", delSectionConfirm: "确定要删除整个区域及其所有链接吗？", modalAddSection: "添加到自定义区域",
+                renameSectionPrompt: "请输入新的区域名称："
             },
             en: {
                 pageTitle: "TechShare - Smart Responsive Nav",
-                langTitle: "Language / 语言",
-                themeTitle: "Color Theme (Local Pref)",
-                themeLight: "Light", themeDark: "Dark",
-                bgTitle: "Custom Wallpaper (Cloud Sync)", bgInputPlace: "Image URL https://...",
-                applyBtn: "Apply", clearBg: "Clear Wallpaper", logoutBtn: "Logout Admin",
-                weatherLoading: "Fetching weather...",
-                enGoogle: "Google", enBing: "Bing", enBaidu: "Baidu",
-                searchGoogle: "Search in Google...", searchBing: "Search in Bing...", searchBaidu: "Search in Baidu...", searchGithub: "Search in GitHub...",
+                langTitle: "Language / 语言", themeTitle: "Color Theme (Local Pref)",
+                themeLight: "Light", themeDark: "Dark", bgTitle: "Custom Wallpaper (Cloud Sync)", bgInputPlace: "Image URL https://...",
+                applyBtn: "Apply", clearBg: "Clear Wallpaper", logoutBtn: "Logout Admin", weatherLoading: "Fetching weather...",
+                enGoogle: "Google", enBing: "Bing", enBaidu: "Baidu", searchGoogle: "Search in Google...", searchBing: "Search in Bing...", searchBaidu: "Search in Baidu...", searchGithub: "Search in GitHub...",
                 cardRec: "Recommended", cardDev: "Dev & Tools", cardCustom: "Webmaster Picks", cardFriend: "Friend Links",
                 linkBlog: "TechShare Blog", linkBili: "Bilibili", linkZhihu: "Zhihu", linkWeibo: "Weibo", linkJuejin: "Juejin",
-                addCloud: "Add (Cloud)", addLocal: "Add (Local)",
-                expandMore: "Show More", collapseMore: "Collapse",
+                addCloud: "Add (Cloud)", addLocal: "Add (Local)", expandMore: "Show More", collapseMore: "Collapse",
                 footerText: "&copy; 2026 TechShare Smart Nav · Powered by Cloudflare", adminBadge: "Logged In",
-                modalAddCloud: "Add Cloud Link", modalAddFriend: "Add Friend Link",
-                siteName: "Site Name", siteNamePlace: "e.g., Google", siteUrl: "Site URL",
-                btnCancel: "Cancel", btnSave: "Save Site",
-                noCloudLinks: "No custom links yet", loadingCloud: "Loading from cloud...",
+                modalAddCloud: "Add Cloud Link", modalAddFriend: "Add Friend Link", siteName: "Site Name", siteNamePlace: "e.g., Google", siteUrl: "Site URL",
+                btnCancel: "Cancel", btnSave: "Save Site", noCloudLinks: "No custom links yet", loadingCloud: "Loading from cloud...",
                 delConfirm: "Are you sure you want to delete this link?", pwdPrompt: "🔐 Enter Admin Password:", pwdSuccess: "🎉 Authenticated! Admin features unlocked.", pwdFail: "❌ Incorrect password!", logoutMsg: "🔒 Logged out safely. Read-only mode activated.",
-                weatherCloudy: "Cloudy", weatherClear: "Clear", weatherRain: "Rain", weatherSnow: "Snow", weatherThunder: "Thunder", weatherDefault: "Good Weather · Clear",
-                validUrlMsg: "Please enter a valid URL!",
-                addSectionBtn: "Add Custom Section",
-                promptSectionName: "Enter new section name (e.g., AI Tools):",
-                delSectionConfirm: "Are you sure you want to delete this entire section?",
-                modalAddSection: "Add to Custom Section"
+                weatherCloudy: "Cloudy", weatherClear: "Clear", weatherRain: "Rain", weatherSnow: "Snow", weatherThunder: "Thunder", weatherDefault: "Good Weather · Clear", validUrlMsg: "Please enter a valid URL!",
+                addSectionBtn: "Add Custom Section", promptSectionName: "Enter new section name (e.g., AI Tools):", delSectionConfirm: "Are you sure you want to delete this entire section?", modalAddSection: "Add to Custom Section",
+                renameSectionPrompt: "Enter new section name:"
             }
         };
 
@@ -320,166 +301,147 @@
         };
 
         function getLocalizedLinkName(originalName, url) {
-            if (url && dynamicLinkDict[url]) { return dynamicLinkDict[url][currentLang]; }
+            if (url && dynamicLinkDict[url]) return dynamicLinkDict[url][currentLang];
             return originalName;
         }
-
         function t(key) { return i18n[currentLang][key] || key; }
-
         function setLanguage(lang) {
-            currentLang = lang; localStorage.setItem('nav_lang', lang);
-            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-            applyLanguage(); updateClockAndGreeting(); renderWeather(); selectEngine(currentEngineKey); 
-            document.getElementById('theme-panel').classList.add('hidden');
+            currentLang = lang; localStorage.setItem('nav_lang', lang); document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+            applyLanguage(); updateClockAndGreeting(); renderWeather(); selectEngine(currentEngineKey); document.getElementById('theme-panel').classList.add('hidden');
         }
-
         function applyLanguage() {
             document.getElementById('page-title').innerText = t('pageTitle');
             document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.getAttribute('data-i18n')); });
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
-            loadCustomLinks(); 
-            loadFriendLinks(); 
-            renderDynamicSections(); // 重新渲染动态分类确保语言刷新
+            loadCustomLinks(); loadFriendLinks(); renderDynamicSections();
         }
 
         // --- 1. 管理员鉴权 ---
         const ADMIN_PWD_HASH = "admin888"; 
-
         function checkAdminSession() {
             const isAdmin = localStorage.getItem('nav_admin_auth') === 'true';
-            if (isAdmin) {
-                document.body.classList.add('is-admin');
-                document.getElementById('admin-badge').classList.remove('hidden');
-            } else {
-                document.body.classList.remove('is-admin');
-                document.getElementById('admin-badge').classList.add('hidden');
-            }
+            if (isAdmin) { document.body.classList.add('is-admin'); document.getElementById('admin-badge').classList.remove('hidden'); } 
+            else { document.body.classList.remove('is-admin'); document.getElementById('admin-badge').classList.add('hidden'); }
         }
-
         function triggerAdminLogin() {
-            if (localStorage.getItem('nav_admin_auth') === 'true') {
-                alert(currentLang === 'zh' ? "提示：您已处于后台管理模式。" : "Notice: You are already in admin mode."); return;
-            }
+            if (localStorage.getItem('nav_admin_auth') === 'true') { alert(currentLang === 'zh' ? "提示：您已处于后台管理模式。" : "Notice: You are already in admin mode."); return; }
             const pwd = prompt(t('pwdPrompt'));
             if (pwd === null) return;
-            if (pwd === ADMIN_PWD_HASH) {
-                localStorage.setItem('nav_admin_auth', 'true'); alert(t('pwdSuccess')); checkAdminSession();
-            } else { alert(t('pwdFail')); }
+            if (pwd === ADMIN_PWD_HASH) { localStorage.setItem('nav_admin_auth', 'true'); alert(t('pwdSuccess')); checkAdminSession(); } 
+            else { alert(t('pwdFail')); }
         }
-
         function logoutAdmin() {
             localStorage.removeItem('nav_admin_auth'); alert(t('logoutMsg'));
             isCustomLinksExpanded = false; checkAdminSession(); document.getElementById('theme-panel').classList.add('hidden');
         }
 
-        // --- 2. 云端核心调度器：统一管理壁纸与动态分类 (/api/config) ---
-        async function initCloudData() {
-            // 主题读取
-            const savedTheme = localStorage.getItem('nav_theme_mode') || 'theme-dark';
-            document.body.classList.remove('theme-light', 'theme-dark');
-            document.body.classList.add(savedTheme);
+        // --- 2. 拖拽核心控制逻辑 (HTML5 Drag & Drop) ---
+        function handleDragStart(e, type, secId, linkIdx = null) {
+            if (localStorage.getItem('nav_admin_auth') !== 'true') { e.preventDefault(); return; }
+            dragType = type; dragSecId = secId; dragLinkIdx = linkIdx;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+        }
 
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.dynamic-section-card, .group').forEach(el => {
+                el.style.border = '';
+            });
+        }
+
+        function handleDragOver(e, type) {
+            e.preventDefault(); 
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(e, type, targetSecId, targetLinkIdx = null) {
+            e.stopPropagation(); 
+            e.preventDefault();
+            if (localStorage.getItem('nav_admin_auth') !== 'true') return;
+
+            let secs = cloudConfig.dynamicSections || [];
+
+            if (dragType === 'section' && type === 'section') {
+                if (dragSecId === targetSecId) return;
+                const fromIdx = secs.findIndex(s => s.id === dragSecId);
+                const toIdx = secs.findIndex(s => s.id === targetSecId);
+                if(fromIdx > -1 && toIdx > -1) {
+                    const [moved] = secs.splice(fromIdx, 1);
+                    secs.splice(toIdx, 0, moved);
+                }
+            } 
+            else if (dragType === 'link' && type === 'link') {
+                if (dragSecId === targetSecId && dragLinkIdx === targetLinkIdx) return;
+                const fromSec = secs.find(s => s.id === dragSecId);
+                const toSec = secs.find(s => s.id === targetSecId);
+                if (fromSec && toSec) {
+                    const [movedLink] = fromSec.links.splice(dragLinkIdx, 1);
+                    toSec.links.splice(targetLinkIdx, 0, movedLink);
+                }
+            } 
+            else if (dragType === 'link' && type === 'section') {
+                 // 跨区域或同区域拖动到卡片空白处（追加到末尾）
+                 const fromSec = secs.find(s => s.id === dragSecId);
+                 const toSec = secs.find(s => s.id === targetSecId);
+                 if (fromSec && toSec) {
+                     const [movedLink] = fromSec.links.splice(dragLinkIdx, 1);
+                     toSec.links.push(movedLink);
+                 }
+            }
+            saveDynamicSections(secs);
+        }
+
+        // --- 3. 云端调度器 ---
+        async function initCloudData() {
+            const savedTheme = localStorage.getItem('nav_theme_mode') || 'theme-dark';
+            document.body.classList.remove('theme-light', 'theme-dark'); document.body.classList.add(savedTheme);
             const globalDefaultBg = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"; 
             let savedBg = localStorage.getItem('nav_custom_wallpaper');
-            
-            // 降级本地数据兜底
             cloudConfig.dynamicSections = JSON.parse(localStorage.getItem('nav_dynamic_sections') || '[]');
             
-            // 拉取远端配置文件 (壁纸 + 自定义分类区域)
             try {
                 const res = await fetch('/api/config');
                 if (res.ok) {
                     const configData = await res.json();
                     if (configData) {
-                        // 1. 同步壁纸
                         if (configData.wallpaper !== undefined) {
-                            if (configData.wallpaper === "") {
-                                savedBg = null; 
-                                localStorage.removeItem('nav_custom_wallpaper');
-                                document.body.classList.add('bg-cleared');
-                            } else {
-                                savedBg = configData.wallpaper; 
-                                localStorage.setItem('nav_custom_wallpaper', savedBg);
-                                document.body.classList.remove('bg-cleared');
-                            }
+                            if (configData.wallpaper === "") { savedBg = null; localStorage.removeItem('nav_custom_wallpaper'); document.body.classList.add('bg-cleared'); } 
+                            else { savedBg = configData.wallpaper; localStorage.setItem('nav_custom_wallpaper', savedBg); document.body.classList.remove('bg-cleared'); }
                         }
-                        // 2. 同步自定义分类区域
-                        if (configData.dynamicSections) {
-                            cloudConfig.dynamicSections = configData.dynamicSections;
-                            localStorage.setItem('nav_dynamic_sections', JSON.stringify(cloudConfig.dynamicSections));
-                        }
+                        if (configData.dynamicSections) { cloudConfig.dynamicSections = configData.dynamicSections; localStorage.setItem('nav_dynamic_sections', JSON.stringify(cloudConfig.dynamicSections)); }
                     }
                 }
-            } catch (e) {
-                console.warn("未能连接到 /api/config，已降级使用本地配置");
-            }
+            } catch (e) {}
 
-            // 壁纸渲染逻辑
             if (!savedBg && !document.body.classList.contains('bg-cleared')) savedBg = globalDefaultBg; 
-            if (savedBg) {
-                applyWallpaperStyles(savedBg);
-                document.getElementById('custom-bg-input').value = savedBg;
-                document.getElementById('clear-bg-btn').classList.remove('hidden');
-            }
-
-            // 渲染云端加载完毕的分类
+            if (savedBg) { applyWallpaperStyles(savedBg); document.getElementById('custom-bg-input').value = savedBg; document.getElementById('clear-bg-btn').classList.remove('hidden'); }
             renderDynamicSections();
         }
 
-        // 推送合并后的云端配置
         async function updateCloudConfig(key, value) {
             cloudConfig[key] = value;
-            try {
-                await fetch('/api/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(cloudConfig)
-                });
-            } catch (e) { console.error("同步到云端失败", e); }
+            try { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cloudConfig) }); } catch (e) { }
         }
 
         function toggleThemeMenu(e) { e.stopPropagation(); document.getElementById('theme-panel').classList.toggle('hidden'); }
-
-        function setBaseTheme(themeName) {
-            document.body.classList.remove('theme-light', 'theme-dark'); document.body.classList.add(themeName);
-            localStorage.setItem('nav_theme_mode', themeName); document.getElementById('theme-panel').classList.add('hidden');
-        }
-
-        function applyWallpaperStyles(url) {
-            document.body.style.backgroundImage = `url('${url}')`;
-            document.body.style.backgroundPosition = 'center';
-            document.body.style.backgroundSize = 'cover';
-            document.body.style.backgroundRepeat = 'no-repeat';
-            document.body.style.backgroundAttachment = 'fixed';
-            document.body.classList.add('has-custom-bg');
-        }
+        function setBaseTheme(themeName) { document.body.classList.remove('theme-light', 'theme-dark'); document.body.classList.add(themeName); localStorage.setItem('nav_theme_mode', themeName); document.getElementById('theme-panel').classList.add('hidden'); }
+        function applyWallpaperStyles(url) { document.body.style.backgroundImage = `url('${url}')`; document.body.style.backgroundPosition = 'center'; document.body.style.backgroundSize = 'cover'; document.body.style.backgroundRepeat = 'no-repeat'; document.body.style.backgroundAttachment = 'fixed'; document.body.classList.add('has-custom-bg'); }
 
         async function applyCustomBg() {
             const url = document.getElementById('custom-bg-input').value.trim();
             if (!url) return alert(t('validUrlMsg'));
-            applyWallpaperStyles(url);
-            localStorage.setItem('nav_custom_wallpaper', url);
-            document.body.classList.remove('bg-cleared');
-            document.getElementById('clear-bg-btn').classList.remove('hidden');
-            document.getElementById('theme-panel').classList.add('hidden');
-            
-            // 安全同步：把整个 cloudConfig 发过去，确保不会擦除已有的区域数据
+            applyWallpaperStyles(url); localStorage.setItem('nav_custom_wallpaper', url); document.body.classList.remove('bg-cleared'); document.getElementById('clear-bg-btn').classList.remove('hidden'); document.getElementById('theme-panel').classList.add('hidden');
             updateCloudConfig('wallpaper', url);
         }
 
         async function clearCustomBg() {
-            document.body.style.backgroundImage = '';
-            document.body.classList.remove('has-custom-bg');
-            localStorage.removeItem('nav_custom_wallpaper');
-            document.body.classList.add('bg-cleared'); 
-            document.getElementById('custom-bg-input').value = '';
-            document.getElementById('clear-bg-btn').classList.add('hidden');
-            document.getElementById('theme-panel').classList.add('hidden');
-            
+            document.body.style.backgroundImage = ''; document.body.classList.remove('has-custom-bg'); localStorage.removeItem('nav_custom_wallpaper'); document.body.classList.add('bg-cleared'); document.getElementById('custom-bg-input').value = ''; document.getElementById('clear-bg-btn').classList.add('hidden'); document.getElementById('theme-panel').classList.add('hidden');
             updateCloudConfig('wallpaper', "");
         }
 
-        // --- 3. 动态自定义区域管理 (新增核心功能) ---
+        // --- 4. 动态自定义区域管理 ---
         function saveDynamicSections(sections) {
             localStorage.setItem('nav_dynamic_sections', JSON.stringify(sections));
             updateCloudConfig('dynamicSections', sections);
@@ -488,9 +450,20 @@
 
         function addCustomSection() {
             const title = prompt(t('promptSectionName'));
-            if (!title) return;
+            if (!title || title.trim() === '') return;
             let secs = cloudConfig.dynamicSections || [];
-            secs.push({ id: Date.now().toString(), title: title, links: [] });
+            secs.push({ id: Date.now().toString(), title: title.trim(), links: [] });
+            saveDynamicSections(secs);
+        }
+
+        // 【新增】修改分类名称
+        function renameCustomSection(id) {
+            let secs = cloudConfig.dynamicSections || [];
+            const sec = secs.find(s => s.id === id);
+            if(!sec) return;
+            const newTitle = prompt(t('renameSectionPrompt'), sec.title);
+            if(!newTitle || newTitle.trim() === '' || newTitle === sec.title) return;
+            sec.title = newTitle.trim();
             saveDynamicSections(secs);
         }
 
@@ -502,17 +475,22 @@
         }
 
         function renderDynamicSections() {
-            // 清理旧的动态卡片防止重复
             document.querySelectorAll('.dynamic-section-card').forEach(el => el.remove());
-
             const grid = document.getElementById('main-nav-grid');
             const addBtnCard = document.getElementById('add-section-card');
             let secs = cloudConfig.dynamicSections || [];
 
             secs.forEach((sec) => {
                 const card = document.createElement('div');
-                card.className = "dynamic-section-card glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300";
+                card.className = "dynamic-section-card glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300 relative";
                 card.id = `section-${sec.id}`;
+                
+                // 区域卡片的拖拽配置
+                card.draggable = true;
+                card.ondragstart = (e) => handleDragStart(e, 'section', sec.id);
+                card.ondragend = handleDragEnd;
+                card.ondragover = (e) => handleDragOver(e, 'section');
+                card.ondrop = (e) => handleDrop(e, 'section', sec.id);
 
                 let linksHtml = '';
                 if (sec.links.length === 0) {
@@ -522,11 +500,21 @@
                         let displayIcon = `<div class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold shrink-0">${link.name.charAt(0).toUpperCase()}</div>`;
                         try { if(link.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(link.url).hostname}" onerror="this.style.display='none'" class="w-5 h-5 rounded object-contain shrink-0" alt="icon" />`; } catch(e){}
 
+                        // 网址拖拽配置
                         linksHtml += `
-                        <div class="group relative flex items-center justify-between p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all">
-                            <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2.5 truncate w-full pr-5">
-                                ${displayIcon} <span class="text-sm font-medium truncate">${link.name}</span>
-                            </a>
+                        <div class="group relative flex items-center justify-between p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all"
+                             draggable="true"
+                             ondragstart="handleDragStart(event, 'link', '${sec.id}', ${idx})"
+                             ondragend="handleDragEnd(event)"
+                             ondragover="handleDragOver(event, 'link')"
+                             ondrop="handleDrop(event, 'link', '${sec.id}', ${idx})">
+                             
+                            <div class="flex items-center w-full">
+                                <i class="fas fa-grip-vertical text-slate-500 opacity-0 group-hover:opacity-50 transition-opacity mr-2.5 cursor-move admin-only text-xs"></i>
+                                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2.5 truncate w-full pr-5">
+                                    ${displayIcon} <span class="text-sm font-medium truncate">${link.name}</span>
+                                </a>
+                            </div>
                             <button type="button" onclick="deleteSectionLink(event, '${sec.id}', ${idx})" class="admin-only absolute right-2 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-slate-500/20 p-1 rounded cursor-pointer"><i class="fas fa-trash-alt"></i></button>
                         </div>`;
                     });
@@ -534,17 +522,21 @@
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-indigo-400 flex items-center"><i class="fas fa-layer-group mr-2.5"></i> <span>${sec.title}</span></h3>
+                        <h3 class="text-lg font-semibold text-indigo-400 flex items-center cursor-move" title="长按拖拽排序" style="cursor: grab;">
+                            <i class="fas fa-grip-vertical mr-2 text-slate-500 opacity-60 admin-only text-sm"></i>
+                            <i class="fas fa-layer-group mr-2.5"></i> <span>${sec.title}</span>
+                        </h3>
                         <div class="flex gap-2">
                             <button type="button" onclick="openLinkModal('section_${sec.id}')" class="admin-only text-xs px-2.5 py-1 bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-lg hover:bg-indigo-600/40 transition-colors cursor-pointer z-[50]">${t('addCloud')}</button>
-                            <button type="button" onclick="deleteCustomSection('${sec.id}')" class="admin-only text-xs px-2.5 py-1 bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-600/40 transition-colors cursor-pointer z-[50]"><i class="fas fa-trash"></i></button>
+                            <!-- 【新增】修改名称按钮 -->
+                            <button type="button" onclick="renameCustomSection('${sec.id}')" class="admin-only text-xs px-2 py-1 bg-sky-600/20 text-sky-400 border border-sky-500/20 rounded-lg hover:bg-sky-600/40 transition-colors cursor-pointer z-[50]"><i class="fas fa-pen"></i></button>
+                            <button type="button" onclick="deleteCustomSection('${sec.id}')" class="admin-only text-xs px-2 py-1 bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-600/40 transition-colors cursor-pointer z-[50]"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-3" style="min-height: 40px;" ondragover="handleDragOver(event, 'section')" ondrop="handleDrop(event, 'section', '${sec.id}')">
                         ${linksHtml}
                     </div>
                 `;
-                // 插入在“添加分类”按钮的前面，完美融入网格流
                 grid.insertBefore(card, addBtnCard);
             });
             checkAdminSession();
@@ -554,206 +546,82 @@
             e.preventDefault(); e.stopPropagation();
             let secs = cloudConfig.dynamicSections || [];
             const sec = secs.find(s => s.id === secId);
-            if(sec) {
-                sec.links.splice(linkIdx, 1);
-                saveDynamicSections(secs);
-            }
+            if(sec) { sec.links.splice(linkIdx, 1); saveDynamicSections(secs); }
         }
 
-        // --- 4. 智能问候语系统 ---
+        // --- 5. 智能时间预测系统 ---
         const sTermNames = ["小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪", "冬至"];
         const sTermInfo = [0, 21208, 42467, 63836, 85337, 107014, 128867, 150921, 173149, 195551, 218072, 240693, 263343, 285989, 308563, 331033, 353350, 375494, 397447, 419210, 440795, 462224, 483532, 504758];
-
-        function getSolarTerm(y, m, d) {
-            const baseDate = new Date(1900, 0, 6, 2, 5, 0);
-            const termDate = new Date((31556925974.7 * (y - 1900) + sTermInfo[(m * 2)]) + baseDate.getTime());
-            if (termDate.getMonth() == m && termDate.getDate() == d) return sTermNames[m * 2];
-            const termDate2 = new Date((31556925974.7 * (y - 1900) + sTermInfo[(m * 2 + 1)]) + baseDate.getTime());
-            if (termDate2.getMonth() == m && termDate2.getDate() == d) return sTermNames[m * 2 + 1];
-            return null;
-        }
-
+        function getSolarTerm(y, m, d) { const baseDate = new Date(1900, 0, 6, 2, 5, 0); const termDate = new Date((31556925974.7 * (y - 1900) + sTermInfo[(m * 2)]) + baseDate.getTime()); if (termDate.getMonth() == m && termDate.getDate() == d) return sTermNames[m * 2]; const termDate2 = new Date((31556925974.7 * (y - 1900) + sTermInfo[(m * 2 + 1)]) + baseDate.getTime()); if (termDate2.getMonth() == m && termDate2.getDate() == d) return sTermNames[m * 2 + 1]; return null; }
         function updateClockAndGreeting() {
-            const now = new Date();
-            const y = now.getFullYear(), m = now.getMonth(), d = now.getDate(), h = now.getHours();
+            const now = new Date(); const y = now.getFullYear(), m = now.getMonth(), d = now.getDate(), h = now.getHours();
             document.getElementById('clock').innerText = `${String(h).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-
             let greetStr = "";
             if (currentLang === 'zh') {
-                const term = getSolarTerm(y, m, d);
-                const md = `${String(m+1).padStart(2, '0')}${String(d).padStart(2, '0')}`;
-                const fests = { "0101": "元旦快乐", "0308": "妇女节快乐", "0501": "五一劳动节", "0601": "儿童节快乐", "1001": "国庆节快乐", "1225": "圣诞节" };
-                const fest = fests[md] || null;
-                
-                if (fest) greetStr = `🎉 今天是 ${fest}，祝你开心！`;
-                else if (term) greetStr = `🍃 今日节气 · 【${term}】，顺应四时，平安喜乐。`;
-                else {
-                    if (h >= 0 && h < 5) greetStr = "🌙 夜深了，静谧的星空在守护你，早点休息哦";
-                    else if (h >= 5 && h < 8) greetStr = "🌅 清晨的朝阳刚刚升起，新的一天充满希望";
-                    else if (h >= 8 && h < 11.5) greetStr = "☀️ 早上好，专注当下，今天也要元气满满";
-                    else if (h >= 11.5 && h < 13.5) greetStr = "🍲 中午好，记得按时吃饭，歇息一下双眼";
-                    else if (h >= 13.5 && h < 17.5) greetStr = "☕ 下午好，来杯清茶或咖啡，继续保持高效";
-                    else if (h >= 17.5 && h < 19.5) greetStr = "🌇 傍晚好，落日余晖很美，放下疲惫准备享受夜晚吧";
-                    else greetStr = "✨ 晚上好，属于自己的惬意时光，好好犒劳一下自己";
-                }
+                const term = getSolarTerm(y, m, d); const md = `${String(m+1).padStart(2, '0')}${String(d).padStart(2, '0')}`;
+                const fests = { "0101": "元旦快乐", "0308": "妇女节快乐", "0501": "五一劳动节", "0601": "儿童节快乐", "1001": "国庆节快乐", "1225": "圣诞节" }; const fest = fests[md] || null;
+                if (fest) greetStr = `🎉 今天是 ${fest}，祝你开心！`; else if (term) greetStr = `🍃 今日节气 · 【${term}】，顺应四时，平安喜乐。`;
+                else { if (h >= 0 && h < 5) greetStr = "🌙 夜深了，静谧的星空在守护你，早点休息哦"; else if (h >= 5 && h < 8) greetStr = "🌅 清晨的朝阳刚刚升起，新的一天充满希望"; else if (h >= 8 && h < 11.5) greetStr = "☀️ 早上好，专注当下，今天也要元气满满"; else if (h >= 11.5 && h < 13.5) greetStr = "🍲 中午好，记得按时吃饭，歇息一下双眼"; else if (h >= 13.5 && h < 17.5) greetStr = "☕ 下午好，来杯清茶或咖啡，继续保持高效"; else if (h >= 17.5 && h < 19.5) greetStr = "🌇 傍晚好，落日余晖很美，放下疲惫准备享受夜晚吧"; else greetStr = "✨ 晚上好，属于自己的惬意时光，好好犒劳一下自己"; }
             } else {
-                if (h >= 0 && h < 5) greetStr = "🌙 Late night, the stars are watching over you. Sleep early.";
-                else if (h >= 5 && h < 8) greetStr = "🌅 The morning sun is rising, a new day full of hope.";
-                else if (h >= 8 && h < 11.5) greetStr = "☀️ Good morning! Stay focused and full of energy.";
-                else if (h >= 11.5 && h < 13.5) greetStr = "🍲 Good noon! Remember to eat on time and rest your eyes.";
-                else if (h >= 13.5 && h < 17.5) greetStr = "☕ Good afternoon! Grab a tea or coffee and keep it up.";
-                else if (h >= 17.5 && h < 19.5) greetStr = "🌇 Good evening! The sunset is beautiful. Relax and enjoy.";
-                else greetStr = "✨ Good night! Enjoy your cozy time and treat yourself well.";
+                if (h >= 0 && h < 5) greetStr = "🌙 Late night, the stars are watching over you. Sleep early."; else if (h >= 5 && h < 8) greetStr = "🌅 The morning sun is rising, a new day full of hope."; else if (h >= 8 && h < 11.5) greetStr = "☀️ Good morning! Stay focused and full of energy."; else if (h >= 11.5 && h < 13.5) greetStr = "🍲 Good noon! Remember to eat on time and rest your eyes."; else if (h >= 13.5 && h < 17.5) greetStr = "☕ Good afternoon! Grab a tea or coffee and keep it up."; else if (h >= 17.5 && h < 19.5) greetStr = "🌇 Good evening! The sunset is beautiful. Relax and enjoy."; else greetStr = "✨ Good night! Enjoy your cozy time and treat yourself well.";
             }
             document.getElementById('greeting').innerText = greetStr;
         }
         setInterval(updateClockAndGreeting, 1000);
 
-        // --- 5. 多语言智能天气定位 ---
+        // --- 6. 多语言智能天气定位 ---
         let weatherState = { city: "Earth", temp: 26, code: 0, fetched: false };
-
         async function fetchWeather() {
-            try {
-                const ipRes = await fetch('https://ipapi.co/json/');
-                if(!ipRes.ok) throw new Error();
-                const ipData = await ipRes.json();
-                const { latitude, longitude, city } = ipData;
-                if(!latitude || !longitude) throw new Error();
-                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
-                const weatherData = await weatherRes.json();
+            try { const ipRes = await fetch('https://ipapi.co/json/'); if(!ipRes.ok) throw new Error(); const ipData = await ipRes.json(); const { latitude, longitude, city } = ipData; if(!latitude || !longitude) throw new Error();
+                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`); const weatherData = await weatherRes.json();
                 weatherState = { city: city || "Earth", temp: Math.round(weatherData.current_weather.temperature), code: weatherData.current_weather.weathercode, fetched: true };
-            } catch (e) { weatherState.fetched = false; }
-            renderWeather();
+            } catch (e) { weatherState.fetched = false; } renderWeather();
         }
-
         function renderWeather() {
             const el = document.getElementById('weather-info');
-            if (!weatherState.fetched) {
-                el.innerHTML = `<i class="fas fa-cloud text-slate-400"></i> <span>${t('weatherDefault')}</span>`; return;
-            }
+            if (!weatherState.fetched) { el.innerHTML = `<i class="fas fa-cloud text-slate-400"></i> <span>${t('weatherDefault')}</span>`; return; }
             let displayCity = weatherState.city;
-            if (currentLang === 'zh') {
-                const cityMap = { "Singapore": "新加坡", "Santa Clara": "圣克拉拉", "San Jose": "圣何塞", "Beijing": "北京", "Shanghai": "上海", "Shenzhen": "深圳", "Guangzhou": "广州", "Hangzhou": "杭州", "Chengdu": "成都", "Hong Kong": "香港" };
-                displayCity = cityMap[displayCity] || displayCity; displayCity = displayCity.replace(/Province|City/gi, "").trim();
-            }
-            const code = weatherState.code;
-            let icon = 'fa-cloud'; let descKey = 'weatherCloudy';
-            if (code === 0) { icon = 'fa-sun text-amber-500'; descKey = 'weatherClear'; }
-            else if ([1, 2, 3].includes(code)) { icon = 'fa-cloud-sun text-indigo-300'; descKey = 'weatherCloudy'; }
-            else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) { icon = 'fa-cloud-showers-heavy text-sky-400'; descKey = 'weatherRain'; }
-            else if ([71, 73, 75, 77, 85, 86].includes(code)) { icon = 'fa-snowflake text-blue-200'; descKey = 'weatherSnow'; }
-            else if ([95, 96, 99].includes(code)) { icon = 'fa-bolt text-yellow-500'; descKey = 'weatherThunder'; }
+            if (currentLang === 'zh') { const cityMap = { "Singapore": "新加坡", "Santa Clara": "圣克拉拉", "San Jose": "圣何塞", "Beijing": "北京", "Shanghai": "上海", "Shenzhen": "深圳", "Guangzhou": "广州", "Hangzhou": "杭州", "Chengdu": "成都", "Hong Kong": "香港" }; displayCity = cityMap[displayCity] || displayCity; displayCity = displayCity.replace(/Province|City/gi, "").trim(); }
+            const code = weatherState.code; let icon = 'fa-cloud'; let descKey = 'weatherCloudy';
+            if (code === 0) { icon = 'fa-sun text-amber-500'; descKey = 'weatherClear'; } else if ([1, 2, 3].includes(code)) { icon = 'fa-cloud-sun text-indigo-300'; descKey = 'weatherCloudy'; } else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) { icon = 'fa-cloud-showers-heavy text-sky-400'; descKey = 'weatherRain'; } else if ([71, 73, 75, 77, 85, 86].includes(code)) { icon = 'fa-snowflake text-blue-200'; descKey = 'weatherSnow'; } else if ([95, 96, 99].includes(code)) { icon = 'fa-bolt text-yellow-500'; descKey = 'weatherThunder'; }
             el.innerHTML = `<i class="fas ${icon}"></i> <span>${displayCity} · ${t(descKey)} ${weatherState.temp}°C</span>`;
         }
 
-        // --- 6. 搜索引擎选择 ---
-        const engines = {
-            google: { action: 'https://www.google.com/search', name: 'q', placeholderKey: 'searchGoogle', icon: 'fab fa-google text-blue-400' },
-            bing: { action: 'https://cn.bing.com/search', name: 'q', placeholderKey: 'searchBing', icon: 'fab fa-microsoft text-teal-400' },
-            baidu: { action: 'https://www.baidu.com/s', name: 'wd', placeholderKey: 'searchBaidu', icon: 'fas fa-paw text-red-400' },
-            github: { action: 'https://github.com/search', name: 'q', placeholderKey: 'searchGithub', icon: 'fab fa-github text-slate-400' }
-        };
-
+        // --- 7. 搜索引擎配置 ---
+        const engines = { google: { action: 'https://www.google.com/search', name: 'q', placeholderKey: 'searchGoogle', icon: 'fab fa-google text-blue-400' }, bing: { action: 'https://cn.bing.com/search', name: 'q', placeholderKey: 'searchBing', icon: 'fab fa-microsoft text-teal-400' }, baidu: { action: 'https://www.baidu.com/s', name: 'wd', placeholderKey: 'searchBaidu', icon: 'fas fa-paw text-red-400' }, github: { action: 'https://github.com/search', name: 'q', placeholderKey: 'searchGithub', icon: 'fab fa-github text-slate-400' } };
         function toggleEngineMenu(e) { e.stopPropagation(); document.getElementById('engine-menu').classList.toggle('hidden'); }
+        function selectEngine(key) { currentEngineKey = key; const form = document.getElementById('search-form'); const input = document.getElementById('search-input'); const icon = document.getElementById('engine-icon'); form.action = engines[key].action; input.name = engines[key].name; input.setAttribute('data-i18n-placeholder', engines[key].placeholderKey); input.placeholder = t(engines[key].placeholderKey); icon.className = engines[key].icon; document.getElementById('engine-menu').classList.add('hidden'); }
 
-        function selectEngine(key) {
-            currentEngineKey = key;
-            const form = document.getElementById('search-form'); const input = document.getElementById('search-input'); const icon = document.getElementById('engine-icon');
-            form.action = engines[key].action; input.name = engines[key].name;
-            input.setAttribute('data-i18n-placeholder', engines[key].placeholderKey); input.placeholder = t(engines[key].placeholderKey);
-            icon.className = engines[key].icon; document.getElementById('engine-menu').classList.add('hidden');
-        }
-
-        // --- 7. 链接管理控制 (涵盖分类、API云端、好友) ---
-        function openLinkModal(target) {
-            currentModalTarget = target;
-            const textEl = document.getElementById('modal-title-text');
-            if(target === 'friend') textEl.innerText = t('modalAddFriend');
-            else if(target === 'custom') textEl.innerText = t('modalAddCloud');
-            else textEl.innerText = t('modalAddSection'); // 添加到动态分类
-            toggleModal(true);
-        }
-
-        function toggleModal(show) {
-            const modal = document.getElementById('modal');
-            if (show) { document.getElementById('site-name').value = ''; document.getElementById('site-url').value = ''; modal.classList.remove('hidden'); } 
-            else { modal.classList.add('hidden'); }
-        }
-
+        // --- 8. 原站长推荐及弹窗统筹 ---
+        function openLinkModal(target) { currentModalTarget = target; const textEl = document.getElementById('modal-title-text'); if(target === 'friend') textEl.innerText = t('modalAddFriend'); else if(target === 'custom') textEl.innerText = t('modalAddCloud'); else textEl.innerText = t('modalAddSection'); toggleModal(true); }
+        function toggleModal(show) { const modal = document.getElementById('modal'); if (show) { document.getElementById('site-name').value = ''; document.getElementById('site-url').value = ''; modal.classList.remove('hidden'); } else { modal.classList.add('hidden'); } }
         function closeModalOnBlank(e) { if(e.target.id === 'modal') toggleModal(false); }
 
         async function saveActiveLink() {
-            const name = document.getElementById('site-name').value.trim();
-            let url = document.getElementById('site-url').value.trim();
+            const name = document.getElementById('site-name').value.trim(); let url = document.getElementById('site-url').value.trim();
             if(!name || !url) return alert(currentLang === 'zh' ? '请完整填写名称和网址！' : 'Please fill in both name and URL!');
             if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
             if (currentModalTarget.startsWith('section_')) {
-                const secId = currentModalTarget.replace('section_', '');
-                let secs = cloudConfig.dynamicSections || [];
-                const sec = secs.find(s => s.id === secId);
-                if(sec) {
-                    sec.links.push({ name, url });
-                    saveDynamicSections(secs); // 此处已经自动调用了 updateCloudConfig 
-                }
+                const secId = currentModalTarget.replace('section_', ''); let secs = cloudConfig.dynamicSections || []; const sec = secs.find(s => s.id === secId);
+                if(sec) { sec.links.push({ name, url }); saveDynamicSections(secs); }
             } else if(currentModalTarget === 'friend') {
-                let links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
-                links.push({ name, url });
-                localStorage.setItem('nav_friend_links', JSON.stringify(links));
-                loadFriendLinks();
+                let links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]'); links.push({ name, url }); localStorage.setItem('nav_friend_links', JSON.stringify(links)); loadFriendLinks();
             } else {
-                try {
-                    const res = await fetch('/api/links');
-                    let links = res.ok ? await res.json() : JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
-                    links.push({ name, url });
-                    await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(links) });
-                    localStorage.setItem('nav_custom_links', JSON.stringify(links)); 
-                    loadCustomLinks();
-                } catch (error) {
-                    const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
-                    links.push({ name, url });
-                    localStorage.setItem('nav_custom_links', JSON.stringify(links));
-                    loadCustomLinks();
-                }
-            }
-            toggleModal(false);
+                try { const res = await fetch('/api/links'); let links = res.ok ? await res.json() : JSON.parse(localStorage.getItem('nav_custom_links') || '[]'); links.push({ name, url }); await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(links) }); localStorage.setItem('nav_custom_links', JSON.stringify(links)); loadCustomLinks(); } 
+                catch (error) { const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]'); links.push({ name, url }); localStorage.setItem('nav_custom_links', JSON.stringify(links)); loadCustomLinks(); }
+            } toggleModal(false);
         }
 
         async function loadCustomLinks() {
-            const container = document.getElementById('custom-links-container');
-            const actionWrapper = document.getElementById('expand-action-wrapper');
-            const mainGrid = document.getElementById('main-nav-grid');
-            const customCard = document.getElementById('card-custom');
-            
+            const container = document.getElementById('custom-links-container'); const actionWrapper = document.getElementById('expand-action-wrapper'); const mainGrid = document.getElementById('main-nav-grid'); const customCard = document.getElementById('card-custom');
             container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10"><i class="fas fa-spinner fa-spin"></i> ${t('loadingCloud')}</div>`;
-            
-            let links = [];
-            try {
-                const res = await fetch('/api/links');
-                if(res.ok) links = await res.json();
-                else throw new Error();
-            } catch(e) {
-                links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
-            }
-            
+            let links = []; try { const res = await fetch('/api/links'); if(res.ok) links = await res.json(); else throw new Error(); } catch(e) { links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]'); }
             container.innerHTML = '';
-            if(links.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10">${t('noCloudLinks')}</div>`;
-                actionWrapper.classList.add('hidden');
-                resetCustomLayout(mainGrid, customCard, container);
-                return;
-            }
-
-            if (links.length > 6 && isCustomLinksExpanded) {
-                mainGrid.classList.remove('xl:grid-cols-3'); mainGrid.classList.add('xl:grid-cols-4');
-                customCard.classList.remove('xl:col-span-1'); customCard.classList.add('xl:col-span-2');
-                container.classList.remove('grid-cols-2'); container.classList.add('grid-cols-2', 'sm:grid-cols-3');
-            } else {
-                resetCustomLayout(mainGrid, customCard, container);
-            }
-
+            if(links.length === 0) { container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10">${t('noCloudLinks')}</div>`; actionWrapper.classList.add('hidden'); resetCustomLayout(mainGrid, customCard, container); return; }
+            if (links.length > 6 && isCustomLinksExpanded) { mainGrid.classList.remove('xl:grid-cols-3'); mainGrid.classList.add('xl:grid-cols-4'); customCard.classList.remove('xl:col-span-1'); customCard.classList.add('xl:col-span-2'); container.classList.remove('grid-cols-2'); container.classList.add('grid-cols-2', 'sm:grid-cols-3'); } 
+            else { resetCustomLayout(mainGrid, customCard, container); }
             const visibleLinks = (links.length > 6 && !isCustomLinksExpanded) ? links.slice(0, 6) : links;
-
             visibleLinks.forEach((item, index) => {
                 const displayName = getLocalizedLinkName(item.name, item.url);
                 let displayIcon = `<div class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
@@ -766,57 +634,17 @@
                         <button type="button" onclick="deleteCustomLink(event, ${index})" class="admin-only absolute right-2 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-slate-500/20 p-1 rounded cursor-pointer"><i class="fas fa-trash-alt"></i></button>
                     </div>`;
             });
-
-            if (links.length > 6) {
-                actionWrapper.classList.remove('hidden');
-                const btn = document.getElementById('expand-btn');
-                btn.innerHTML = isCustomLinksExpanded 
-                    ? `<span data-i18n="collapseMore">${t('collapseMore')}</span> <i class="fas fa-chevron-up text-[10px]"></i>` 
-                    : `<span data-i18n="expandMore">${t('expandMore')}</span> (${links.length - 6}) <i class="fas fa-chevron-down text-[10px]"></i>`;
-            } else { actionWrapper.classList.add('hidden'); }
+            if (links.length > 6) { actionWrapper.classList.remove('hidden'); const btn = document.getElementById('expand-btn'); btn.innerHTML = isCustomLinksExpanded ? `<span data-i18n="collapseMore">${t('collapseMore')}</span> <i class="fas fa-chevron-up text-[10px]"></i>` : `<span data-i18n="expandMore">${t('expandMore')}</span> (${links.length - 6}) <i class="fas fa-chevron-down text-[10px]"></i>`; } 
+            else { actionWrapper.classList.add('hidden'); }
         }
 
-        function resetCustomLayout(mainGrid, customCard, container) {
-            mainGrid.classList.remove('xl:grid-cols-4'); mainGrid.classList.add('xl:grid-cols-3');
-            customCard.classList.remove('xl:col-span-2'); customCard.classList.add('xl:col-span-1');
-            container.classList.remove('sm:grid-cols-3'); container.classList.add('grid-cols-2');
-        }
-
+        function resetCustomLayout(mainGrid, customCard, container) { mainGrid.classList.remove('xl:grid-cols-4'); mainGrid.classList.add('xl:grid-cols-3'); customCard.classList.remove('xl:col-span-2'); customCard.classList.add('xl:col-span-1'); container.classList.remove('sm:grid-cols-3'); container.classList.add('grid-cols-2'); }
         function toggleExpandCustomLinks() { isCustomLinksExpanded = !isCustomLinksExpanded; loadCustomLinks(); }
-
-        async function deleteCustomLink(e, index) {
-            e.preventDefault(); e.stopPropagation();
-            if(!confirm(t('delConfirm'))) return;
-            try {
-                const res = await fetch('/api/links');
-                let links = res.ok ? await res.json() : JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
-                links.splice(index, 1);
-                await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(links) });
-                localStorage.setItem('nav_custom_links', JSON.stringify(links));
-                if(links.length <= 6) isCustomLinksExpanded = false;
-                loadCustomLinks();
-            } catch(error) {
-                const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
-                links.splice(index, 1);
-                localStorage.setItem('nav_custom_links', JSON.stringify(links));
-                if(links.length <= 6) isCustomLinksExpanded = false;
-                loadCustomLinks();
-            }
-        }
+        async function deleteCustomLink(e, index) { e.preventDefault(); e.stopPropagation(); if(!confirm(t('delConfirm'))) return; try { const res = await fetch('/api/links'); let links = res.ok ? await res.json() : JSON.parse(localStorage.getItem('nav_custom_links') || '[]'); links.splice(index, 1); await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(links) }); localStorage.setItem('nav_custom_links', JSON.stringify(links)); if(links.length <= 6) isCustomLinksExpanded = false; loadCustomLinks(); } catch(error) { const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]'); links.splice(index, 1); localStorage.setItem('nav_custom_links', JSON.stringify(links)); if(links.length <= 6) isCustomLinksExpanded = false; loadCustomLinks(); } }
 
         function loadFriendLinks() {
-            const container = document.getElementById('friend-links-container');
-            const linksStr = localStorage.getItem('nav_friend_links');
-            let links = linksStr ? JSON.parse(linksStr) : [];
-            container.innerHTML = '';
-            
-            if(links.length === 0) {
-                links = [
-                    { name: "IT头条博客", url: "https://it-toutiao.blogspot.com" },
-                    { name: "科技共享导航", url: "https://kjgx.168668520.xyz" }
-                ];
-            }
-
+            const container = document.getElementById('friend-links-container'); let linksStr = localStorage.getItem('nav_friend_links'); let links = linksStr ? JSON.parse(linksStr) : []; container.innerHTML = '';
+            if(links.length === 0) { links = [ { name: "IT头条博客", url: "https://it-toutiao.blogspot.com" }, { name: "科技共享导航", url: "https://kjgx.168668520.xyz" } ]; }
             links.forEach((item, index) => {
                 const displayName = getLocalizedLinkName(item.name, item.url);
                 container.innerHTML += `
@@ -826,35 +654,11 @@
                     </div>`;
             });
         }
+        function deleteFriendLink(e, index) { e.preventDefault(); e.stopPropagation(); let linksStr = localStorage.getItem('nav_friend_links'); let links = linksStr ? JSON.parse(linksStr) : []; if(links.length === 0) { links = [ { name: "IT头条博客", url: "https://it-toutiao.blogspot.com" }, { name: "科技共享导航", url: "https://kjgx.168668520.xyz" } ]; } links.splice(index, 1); localStorage.setItem('nav_friend_links', JSON.stringify(links)); loadFriendLinks(); }
 
-        function deleteFriendLink(e, index) {
-            e.preventDefault(); e.stopPropagation();
-            let linksStr = localStorage.getItem('nav_friend_links');
-            let links = linksStr ? JSON.parse(linksStr) : [];
-            if(links.length === 0) {
-                 links = [
-                    { name: "IT头条博客", url: "https://it-toutiao.blogspot.com" },
-                    { name: "科技共享导航", url: "https://kjgx.168668520.xyz" }
-                ];
-            }
-            links.splice(index, 1);
-            localStorage.setItem('nav_friend_links', JSON.stringify(links));
-            loadFriendLinks();
-        }
-
-        // --- 全局初始化运转流水线 ---
-        document.addEventListener('click', () => {
-            document.getElementById('engine-menu').classList.add('hidden');
-            document.getElementById('theme-panel').classList.add('hidden');
-        });
-
-        checkAdminSession();
-        document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
-        applyLanguage();
-        updateClockAndGreeting();
-        fetchWeather();
-        // 发起云端数据加载（会自动调用 renderDynamicSections 进行渲染）
-        initCloudData();
+        // --- 初始化运转 ---
+        document.addEventListener('click', () => { document.getElementById('engine-menu').classList.add('hidden'); document.getElementById('theme-panel').classList.add('hidden'); });
+        checkAdminSession(); document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en'; applyLanguage(); updateClockAndGreeting(); fetchWeather(); initCloudData();
     </script>
 </body>
 </html>
