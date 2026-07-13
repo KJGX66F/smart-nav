@@ -103,7 +103,6 @@
             <!-- 壁纸设置 (管理员，连接至云端/api/config) -->
             <div class="admin-only space-y-1.5 px-1 border-t border-slate-800 pt-3 mt-1">
                 <div class="flex justify-between items-center">
-                    <!-- 注意看这里！我已经把它改成了“全站同步” -->
                     <label class="text-[11px] text-slate-400 font-bold" data-i18n="bgTitle">自定义背景 (全站同步)</label>
                     <button onclick="clearCustomBg()" id="clear-bg-btn" class="text-[10px] text-red-400 hover:underline hidden" data-i18n="clearBg">清除壁纸</button>
                 </div>
@@ -201,6 +200,12 @@
                 </div>
             </div>
 
+            <!-- 【新增】添加动态分类按钮 (管理员可见) -->
+            <div id="add-section-card" class="admin-only glass-card rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500/50 transition-all border-dashed border-2 border-slate-500/30" onclick="addCustomSection()" style="min-height: 180px;">
+                <i class="fas fa-plus text-3xl text-slate-400 mb-2"></i>
+                <span class="text-sm font-medium text-slate-400 mt-1" data-i18n="addSectionBtn">添加自定义区域</span>
+            </div>
+
         </div>
 
         <div class="w-full relative z-10 mb-12">
@@ -241,7 +246,15 @@
     </div>
 
     <script>
-        // --- 0. 国际化 (i18n) 语言支持系统 ---
+        // --- 0. 全局状态与配置字典 ---
+        let currentLang = localStorage.getItem('nav_lang') || 'zh';
+        let isCustomLinksExpanded = false;
+        let currentModalTarget = 'custom'; 
+        let currentEngineKey = 'google';
+        
+        // 全局云端配置中心（整合了壁纸和自定义区域）
+        let cloudConfig = { wallpaper: "", dynamicSections: [] };
+
         const i18n = {
             zh: {
                 pageTitle: "科技共享-智能多功能响应式导航",
@@ -264,7 +277,12 @@
                 noCloudLinks: "暂无自定义链接", loadingCloud: "正在从云端加载...",
                 delConfirm: "确定要删除这个云端链接吗？", pwdPrompt: "🔐 请输入后台管理员安全密码：", pwdSuccess: "🎉 认证成功！管理功能已全部解锁。", pwdFail: "❌ 密码错误，鉴权失败！", logoutMsg: "🔒 已安全退出管理后台，页面回归只读状态。",
                 weatherCloudy: "多云", weatherClear: "晴朗", weatherRain: "阵雨", weatherSnow: "降雪", weatherThunder: "雷阵雨", weatherDefault: "风调雨顺 · 晴",
-                validUrlMsg: "提示：请输入有效的网址！"
+                validUrlMsg: "提示：请输入有效的网址！",
+                // 新增动态区域的翻译
+                addSectionBtn: "添加自定义区域",
+                promptSectionName: "请输入新区域的名称 (例如：AI工具)：",
+                delSectionConfirm: "确定要删除整个区域及其所有链接吗？",
+                modalAddSection: "添加到自定义区域"
             },
             en: {
                 pageTitle: "TechShare - Smart Responsive Nav",
@@ -285,13 +303,16 @@
                 siteName: "Site Name", siteNamePlace: "e.g., Google", siteUrl: "Site URL",
                 btnCancel: "Cancel", btnSave: "Save Site",
                 noCloudLinks: "No custom links yet", loadingCloud: "Loading from cloud...",
-                delConfirm: "Are you sure you want to delete this cloud link?", pwdPrompt: "🔐 Enter Admin Password:", pwdSuccess: "🎉 Authenticated! Admin features unlocked.", pwdFail: "❌ Incorrect password!", logoutMsg: "🔒 Logged out safely. Read-only mode activated.",
+                delConfirm: "Are you sure you want to delete this link?", pwdPrompt: "🔐 Enter Admin Password:", pwdSuccess: "🎉 Authenticated! Admin features unlocked.", pwdFail: "❌ Incorrect password!", logoutMsg: "🔒 Logged out safely. Read-only mode activated.",
                 weatherCloudy: "Cloudy", weatherClear: "Clear", weatherRain: "Rain", weatherSnow: "Snow", weatherThunder: "Thunder", weatherDefault: "Good Weather · Clear",
-                validUrlMsg: "Please enter a valid URL!"
+                validUrlMsg: "Please enter a valid URL!",
+                addSectionBtn: "Add Custom Section",
+                promptSectionName: "Enter new section name (e.g., AI Tools):",
+                delSectionConfirm: "Are you sure you want to delete this entire section?",
+                modalAddSection: "Add to Custom Section"
             }
         };
 
-        // 【关键】：智能数据翻译字典
         const dynamicLinkDict = {
             "https://kjgx668.blogspot.com": { zh: "科技共享", en: "TechShare Blog" },
             "https://kjgx.168668520.xyz": { zh: "科技共享导航", en: "TechShare Nav" },
@@ -299,42 +320,27 @@
         };
 
         function getLocalizedLinkName(originalName, url) {
-            if (url && dynamicLinkDict[url]) {
-                return dynamicLinkDict[url][currentLang];
-            }
+            if (url && dynamicLinkDict[url]) { return dynamicLinkDict[url][currentLang]; }
             return originalName;
         }
-
-        let currentLang = localStorage.getItem('nav_lang') || 'zh';
 
         function t(key) { return i18n[currentLang][key] || key; }
 
         function setLanguage(lang) {
-            currentLang = lang;
-            localStorage.setItem('nav_lang', lang);
+            currentLang = lang; localStorage.setItem('nav_lang', lang);
             document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-            applyLanguage();
-            updateClockAndGreeting();
-            renderWeather(); 
-            selectEngine(currentEngineKey); 
+            applyLanguage(); updateClockAndGreeting(); renderWeather(); selectEngine(currentEngineKey); 
             document.getElementById('theme-panel').classList.add('hidden');
         }
 
         function applyLanguage() {
             document.getElementById('page-title').innerText = t('pageTitle');
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                el.innerHTML = t(el.getAttribute('data-i18n'));
-            });
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
-            });
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.getAttribute('data-i18n')); });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
             loadCustomLinks(); 
             loadFriendLinks(); 
+            renderDynamicSections(); // 重新渲染动态分类确保语言刷新
         }
-
-        let isCustomLinksExpanded = false;
-        let currentModalTarget = 'custom'; 
-        let currentEngineKey = 'google';
 
         // --- 1. 管理员鉴权 ---
         const ADMIN_PWD_HASH = "admin888"; 
@@ -366,8 +372,9 @@
             isCustomLinksExpanded = false; checkAdminSession(); document.getElementById('theme-panel').classList.add('hidden');
         }
 
-        // --- 2. 主题与壁纸控制 (包含 /api/config 云端同步) ---
-        async function initTheme() {
+        // --- 2. 云端核心调度器：统一管理壁纸与动态分类 (/api/config) ---
+        async function initCloudData() {
+            // 主题读取
             const savedTheme = localStorage.getItem('nav_theme_mode') || 'theme-dark';
             document.body.classList.remove('theme-light', 'theme-dark');
             document.body.classList.add(savedTheme);
@@ -375,20 +382,31 @@
             const globalDefaultBg = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"; 
             let savedBg = localStorage.getItem('nav_custom_wallpaper');
             
-            // 【关键】：通过 API 获取云端壁纸
+            // 降级本地数据兜底
+            cloudConfig.dynamicSections = JSON.parse(localStorage.getItem('nav_dynamic_sections') || '[]');
+            
+            // 拉取远端配置文件 (壁纸 + 自定义分类区域)
             try {
                 const res = await fetch('/api/config');
                 if (res.ok) {
                     const configData = await res.json();
-                    if (configData && configData.wallpaper !== undefined) {
-                        if (configData.wallpaper === "") {
-                            savedBg = null; 
-                            localStorage.removeItem('nav_custom_wallpaper');
-                            document.body.classList.add('bg-cleared');
-                        } else {
-                            savedBg = configData.wallpaper; 
-                            localStorage.setItem('nav_custom_wallpaper', savedBg);
-                            document.body.classList.remove('bg-cleared');
+                    if (configData) {
+                        // 1. 同步壁纸
+                        if (configData.wallpaper !== undefined) {
+                            if (configData.wallpaper === "") {
+                                savedBg = null; 
+                                localStorage.removeItem('nav_custom_wallpaper');
+                                document.body.classList.add('bg-cleared');
+                            } else {
+                                savedBg = configData.wallpaper; 
+                                localStorage.setItem('nav_custom_wallpaper', savedBg);
+                                document.body.classList.remove('bg-cleared');
+                            }
+                        }
+                        // 2. 同步自定义分类区域
+                        if (configData.dynamicSections) {
+                            cloudConfig.dynamicSections = configData.dynamicSections;
+                            localStorage.setItem('nav_dynamic_sections', JSON.stringify(cloudConfig.dynamicSections));
                         }
                     }
                 }
@@ -396,44 +414,35 @@
                 console.warn("未能连接到 /api/config，已降级使用本地配置");
             }
 
-            if (!savedBg && !document.body.classList.contains('bg-cleared')) {
-                savedBg = globalDefaultBg; 
-            }
-
+            // 壁纸渲染逻辑
+            if (!savedBg && !document.body.classList.contains('bg-cleared')) savedBg = globalDefaultBg; 
             if (savedBg) {
                 applyWallpaperStyles(savedBg);
                 document.getElementById('custom-bg-input').value = savedBg;
                 document.getElementById('clear-bg-btn').classList.remove('hidden');
             }
+
+            // 渲染云端加载完毕的分类
+            renderDynamicSections();
         }
 
-        function toggleThemeMenu(e) {
-            e.stopPropagation(); document.getElementById('theme-panel').classList.toggle('hidden');
-        }
-
-        function setBaseTheme(themeName) {
-            document.body.classList.remove('theme-light', 'theme-dark'); document.body.classList.add(themeName);
-            localStorage.setItem('nav_theme_mode', themeName); document.getElementById('theme-panel').classList.add('hidden');
-        }
-
-        async function applyCustomBg() {
-            const url = document.getElementById('custom-bg-input').value.trim();
-            if (!url) return alert(t('validUrlMsg'));
-            
-            applyWallpaperStyles(url);
-            localStorage.setItem('nav_custom_wallpaper', url);
-            document.body.classList.remove('bg-cleared');
-            document.getElementById('clear-bg-btn').classList.remove('hidden');
-            document.getElementById('theme-panel').classList.add('hidden');
-
-            // 【关键】：向云端发送新的壁纸配置
+        // 推送合并后的云端配置
+        async function updateCloudConfig(key, value) {
+            cloudConfig[key] = value;
             try {
                 await fetch('/api/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ wallpaper: url })
+                    body: JSON.stringify(cloudConfig)
                 });
-            } catch (e) { console.error("壁纸同步到云端失败", e); }
+            } catch (e) { console.error("同步到云端失败", e); }
+        }
+
+        function toggleThemeMenu(e) { e.stopPropagation(); document.getElementById('theme-panel').classList.toggle('hidden'); }
+
+        function setBaseTheme(themeName) {
+            document.body.classList.remove('theme-light', 'theme-dark'); document.body.classList.add(themeName);
+            localStorage.setItem('nav_theme_mode', themeName); document.getElementById('theme-panel').classList.add('hidden');
         }
 
         function applyWallpaperStyles(url) {
@@ -445,6 +454,19 @@
             document.body.classList.add('has-custom-bg');
         }
 
+        async function applyCustomBg() {
+            const url = document.getElementById('custom-bg-input').value.trim();
+            if (!url) return alert(t('validUrlMsg'));
+            applyWallpaperStyles(url);
+            localStorage.setItem('nav_custom_wallpaper', url);
+            document.body.classList.remove('bg-cleared');
+            document.getElementById('clear-bg-btn').classList.remove('hidden');
+            document.getElementById('theme-panel').classList.add('hidden');
+            
+            // 安全同步：把整个 cloudConfig 发过去，确保不会擦除已有的区域数据
+            updateCloudConfig('wallpaper', url);
+        }
+
         async function clearCustomBg() {
             document.body.style.backgroundImage = '';
             document.body.classList.remove('has-custom-bg');
@@ -453,18 +475,92 @@
             document.getElementById('custom-bg-input').value = '';
             document.getElementById('clear-bg-btn').classList.add('hidden');
             document.getElementById('theme-panel').classList.add('hidden');
-
-            // 【关键】：清除云端壁纸
-            try {
-                await fetch('/api/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ wallpaper: "" })
-                });
-            } catch (e) {}
+            
+            updateCloudConfig('wallpaper', "");
         }
 
-        // --- 3. 智能问候语系统 ---
+        // --- 3. 动态自定义区域管理 (新增核心功能) ---
+        function saveDynamicSections(sections) {
+            localStorage.setItem('nav_dynamic_sections', JSON.stringify(sections));
+            updateCloudConfig('dynamicSections', sections);
+            renderDynamicSections();
+        }
+
+        function addCustomSection() {
+            const title = prompt(t('promptSectionName'));
+            if (!title) return;
+            let secs = cloudConfig.dynamicSections || [];
+            secs.push({ id: Date.now().toString(), title: title, links: [] });
+            saveDynamicSections(secs);
+        }
+
+        function deleteCustomSection(id) {
+            if(!confirm(t('delSectionConfirm'))) return;
+            let secs = cloudConfig.dynamicSections || [];
+            secs = secs.filter(s => s.id !== id);
+            saveDynamicSections(secs);
+        }
+
+        function renderDynamicSections() {
+            // 清理旧的动态卡片防止重复
+            document.querySelectorAll('.dynamic-section-card').forEach(el => el.remove());
+
+            const grid = document.getElementById('main-nav-grid');
+            const addBtnCard = document.getElementById('add-section-card');
+            let secs = cloudConfig.dynamicSections || [];
+
+            secs.forEach((sec) => {
+                const card = document.createElement('div');
+                card.className = "dynamic-section-card glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300";
+                card.id = `section-${sec.id}`;
+
+                let linksHtml = '';
+                if (sec.links.length === 0) {
+                    linksHtml = `<div class="col-span-full text-center text-xs text-slate-400/60 py-4">${t('noCloudLinks')}</div>`;
+                } else {
+                    sec.links.forEach((link, idx) => {
+                        let displayIcon = `<div class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold shrink-0">${link.name.charAt(0).toUpperCase()}</div>`;
+                        try { if(link.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(link.url).hostname}" onerror="this.style.display='none'" class="w-5 h-5 rounded object-contain shrink-0" alt="icon" />`; } catch(e){}
+
+                        linksHtml += `
+                        <div class="group relative flex items-center justify-between p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all">
+                            <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2.5 truncate w-full pr-5">
+                                ${displayIcon} <span class="text-sm font-medium truncate">${link.name}</span>
+                            </a>
+                            <button type="button" onclick="deleteSectionLink(event, '${sec.id}', ${idx})" class="admin-only absolute right-2 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-slate-500/20 p-1 rounded cursor-pointer"><i class="fas fa-trash-alt"></i></button>
+                        </div>`;
+                    });
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-indigo-400 flex items-center"><i class="fas fa-layer-group mr-2.5"></i> <span>${sec.title}</span></h3>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="openLinkModal('section_${sec.id}')" class="admin-only text-xs px-2.5 py-1 bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-lg hover:bg-indigo-600/40 transition-colors cursor-pointer z-[50]">${t('addCloud')}</button>
+                            <button type="button" onclick="deleteCustomSection('${sec.id}')" class="admin-only text-xs px-2.5 py-1 bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-600/40 transition-colors cursor-pointer z-[50]"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        ${linksHtml}
+                    </div>
+                `;
+                // 插入在“添加分类”按钮的前面，完美融入网格流
+                grid.insertBefore(card, addBtnCard);
+            });
+            checkAdminSession();
+        }
+
+        function deleteSectionLink(e, secId, linkIdx) {
+            e.preventDefault(); e.stopPropagation();
+            let secs = cloudConfig.dynamicSections || [];
+            const sec = secs.find(s => s.id === secId);
+            if(sec) {
+                sec.links.splice(linkIdx, 1);
+                saveDynamicSections(secs);
+            }
+        }
+
+        // --- 4. 智能问候语系统 ---
         const sTermNames = ["小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪", "冬至"];
         const sTermInfo = [0, 21208, 42467, 63836, 85337, 107014, 128867, 150921, 173149, 195551, 218072, 240693, 263343, 285989, 308563, 331033, 353350, 375494, 397447, 419210, 440795, 462224, 483532, 504758];
 
@@ -513,7 +609,7 @@
         }
         setInterval(updateClockAndGreeting, 1000);
 
-        // --- 4. 多语言智能天气定位 ---
+        // --- 5. 多语言智能天气定位 ---
         let weatherState = { city: "Earth", temp: 26, code: 0, fetched: false };
 
         async function fetchWeather() {
@@ -521,19 +617,11 @@
                 const ipRes = await fetch('https://ipapi.co/json/');
                 if(!ipRes.ok) throw new Error();
                 const ipData = await ipRes.json();
-                
                 const { latitude, longitude, city } = ipData;
                 if(!latitude || !longitude) throw new Error();
-
                 const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
                 const weatherData = await weatherRes.json();
-                
-                weatherState = {
-                    city: city || "Earth",
-                    temp: Math.round(weatherData.current_weather.temperature),
-                    code: weatherData.current_weather.weathercode,
-                    fetched: true
-                };
+                weatherState = { city: city || "Earth", temp: Math.round(weatherData.current_weather.temperature), code: weatherData.current_weather.weathercode, fetched: true };
             } catch (e) { weatherState.fetched = false; }
             renderWeather();
         }
@@ -541,21 +629,13 @@
         function renderWeather() {
             const el = document.getElementById('weather-info');
             if (!weatherState.fetched) {
-                el.innerHTML = `<i class="fas fa-cloud text-slate-400"></i> <span>${t('weatherDefault')}</span>`;
-                return;
+                el.innerHTML = `<i class="fas fa-cloud text-slate-400"></i> <span>${t('weatherDefault')}</span>`; return;
             }
-
             let displayCity = weatherState.city;
             if (currentLang === 'zh') {
-                const cityMap = {
-                    "Singapore": "新加坡", "Santa Clara": "圣克拉拉", "San Jose": "圣何塞", 
-                    "Beijing": "北京", "Shanghai": "上海", "Shenzhen": "深圳", 
-                    "Guangzhou": "广州", "Hangzhou": "杭州", "Chengdu": "成都", "Hong Kong": "香港"
-                };
-                displayCity = cityMap[displayCity] || displayCity;
-                displayCity = displayCity.replace(/Province|City/gi, "").trim();
+                const cityMap = { "Singapore": "新加坡", "Santa Clara": "圣克拉拉", "San Jose": "圣何塞", "Beijing": "北京", "Shanghai": "上海", "Shenzhen": "深圳", "Guangzhou": "广州", "Hangzhou": "杭州", "Chengdu": "成都", "Hong Kong": "香港" };
+                displayCity = cityMap[displayCity] || displayCity; displayCity = displayCity.replace(/Province|City/gi, "").trim();
             }
-
             const code = weatherState.code;
             let icon = 'fa-cloud'; let descKey = 'weatherCloudy';
             if (code === 0) { icon = 'fa-sun text-amber-500'; descKey = 'weatherClear'; }
@@ -563,11 +643,10 @@
             else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) { icon = 'fa-cloud-showers-heavy text-sky-400'; descKey = 'weatherRain'; }
             else if ([71, 73, 75, 77, 85, 86].includes(code)) { icon = 'fa-snowflake text-blue-200'; descKey = 'weatherSnow'; }
             else if ([95, 96, 99].includes(code)) { icon = 'fa-bolt text-yellow-500'; descKey = 'weatherThunder'; }
-
             el.innerHTML = `<i class="fas ${icon}"></i> <span>${displayCity} · ${t(descKey)} ${weatherState.temp}°C</span>`;
         }
 
-        // --- 5. 搜索引擎选择 ---
+        // --- 6. 搜索引擎选择 ---
         const engines = {
             google: { action: 'https://www.google.com/search', name: 'q', placeholderKey: 'searchGoogle', icon: 'fab fa-google text-blue-400' },
             bing: { action: 'https://cn.bing.com/search', name: 'q', placeholderKey: 'searchBing', icon: 'fab fa-microsoft text-teal-400' },
@@ -579,30 +658,26 @@
 
         function selectEngine(key) {
             currentEngineKey = key;
-            const form = document.getElementById('search-form');
-            const input = document.getElementById('search-input');
-            const icon = document.getElementById('engine-icon');
+            const form = document.getElementById('search-form'); const input = document.getElementById('search-input'); const icon = document.getElementById('engine-icon');
             form.action = engines[key].action; input.name = engines[key].name;
-            input.setAttribute('data-i18n-placeholder', engines[key].placeholderKey);
-            input.placeholder = t(engines[key].placeholderKey);
-            icon.className = engines[key].icon;
-            document.getElementById('engine-menu').classList.add('hidden');
+            input.setAttribute('data-i18n-placeholder', engines[key].placeholderKey); input.placeholder = t(engines[key].placeholderKey);
+            icon.className = engines[key].icon; document.getElementById('engine-menu').classList.add('hidden');
         }
 
-        // --- 6. 链接管理 (云端与本地) ---
+        // --- 7. 链接管理控制 (涵盖分类、API云端、好友) ---
         function openLinkModal(target) {
             currentModalTarget = target;
             const textEl = document.getElementById('modal-title-text');
-            textEl.innerText = target === 'friend' ? t('modalAddFriend') : t('modalAddCloud');
+            if(target === 'friend') textEl.innerText = t('modalAddFriend');
+            else if(target === 'custom') textEl.innerText = t('modalAddCloud');
+            else textEl.innerText = t('modalAddSection'); // 添加到动态分类
             toggleModal(true);
         }
 
         function toggleModal(show) {
             const modal = document.getElementById('modal');
-            if (show) {
-                document.getElementById('site-name').value = ''; document.getElementById('site-url').value = '';
-                modal.classList.remove('hidden');
-            } else { modal.classList.add('hidden'); }
+            if (show) { document.getElementById('site-name').value = ''; document.getElementById('site-url').value = ''; modal.classList.remove('hidden'); } 
+            else { modal.classList.add('hidden'); }
         }
 
         function closeModalOnBlank(e) { if(e.target.id === 'modal') toggleModal(false); }
@@ -613,7 +688,15 @@
             if(!name || !url) return alert(currentLang === 'zh' ? '请完整填写名称和网址！' : 'Please fill in both name and URL!');
             if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
-            if(currentModalTarget === 'friend') {
+            if (currentModalTarget.startsWith('section_')) {
+                const secId = currentModalTarget.replace('section_', '');
+                let secs = cloudConfig.dynamicSections || [];
+                const sec = secs.find(s => s.id === secId);
+                if(sec) {
+                    sec.links.push({ name, url });
+                    saveDynamicSections(secs); // 此处已经自动调用了 updateCloudConfig 
+                }
+            } else if(currentModalTarget === 'friend') {
                 let links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
                 links.push({ name, url });
                 localStorage.setItem('nav_friend_links', JSON.stringify(links));
@@ -672,13 +755,9 @@
             const visibleLinks = (links.length > 6 && !isCustomLinksExpanded) ? links.slice(0, 6) : links;
 
             visibleLinks.forEach((item, index) => {
-                // 【关键】：在这里进行动态的链接名称翻译！
                 const displayName = getLocalizedLinkName(item.name, item.url);
-                
                 let displayIcon = `<div class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
-                try {
-                    if(item.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(item.url).hostname}" onerror="this.style.display='none'" class="w-5 h-5 rounded object-contain shrink-0" alt="icon" />`;
-                } catch(err){}
+                try { if(item.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(item.url).hostname}" onerror="this.style.display='none'" class="w-5 h-5 rounded object-contain shrink-0" alt="icon" />`; } catch(err){}
                 container.innerHTML += `
                     <div class="group relative flex items-center justify-between p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all">
                         <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2.5 truncate w-full pr-5">
@@ -725,12 +804,10 @@
             }
         }
 
-        // --- 7. 友情链接加载模块 ---
         function loadFriendLinks() {
             const container = document.getElementById('friend-links-container');
             const linksStr = localStorage.getItem('nav_friend_links');
             let links = linksStr ? JSON.parse(linksStr) : [];
-            
             container.innerHTML = '';
             
             if(links.length === 0) {
@@ -741,7 +818,6 @@
             }
 
             links.forEach((item, index) => {
-                // 【关键】：在这里进行动态的链接名称翻译！
                 const displayName = getLocalizedLinkName(item.name, item.url);
                 container.innerHTML += `
                     <div class="group relative flex items-center justify-between p-2.5 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-emerald-600/10 transition-all text-center">
@@ -766,18 +842,19 @@
             loadFriendLinks();
         }
 
-        // --- 全局初始化 ---
+        // --- 全局初始化运转流水线 ---
         document.addEventListener('click', () => {
             document.getElementById('engine-menu').classList.add('hidden');
             document.getElementById('theme-panel').classList.add('hidden');
         });
 
         checkAdminSession();
-        initTheme();
         document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
         applyLanguage();
         updateClockAndGreeting();
         fetchWeather();
+        // 发起云端数据加载（会自动调用 renderDynamicSections 进行渲染）
+        initCloudData();
     </script>
 </body>
 </html>
