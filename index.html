@@ -162,6 +162,7 @@
         <!-- 导航卡片网格 -->
         <div id="main-nav-grid" class="w-full grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8 relative z-10 items-start">
             
+            <!-- 原有预设推荐区域 -->
             <div id="card-recommend" class="glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300">
                 <h3 class="text-lg font-semibold text-indigo-400 mb-4 flex items-center"><i class="fas fa-star mr-2.5"></i> <span data-i18n="cardRec">常用推荐</span></h3>
                 <div class="grid grid-cols-2 gap-3">
@@ -186,12 +187,14 @@
                 </div>
             </div>
 
+            <!-- 系统自带的站长推荐 -->
             <div id="card-custom" class="glass-card rounded-2xl p-6 shadow-xl hover:border-pink-500/30 transition-all duration-300 xl:col-span-1">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-pink-400 flex items-center"><i class="fas fa-folder-plus mr-2.5"></i> <span data-i18n="cardCustom">站长推荐</span></h3>
                     <button type="button" onclick="openLinkModal('custom')" class="admin-only text-xs px-2.5 py-1 bg-pink-600/20 text-pink-400 border border-pink-500/20 rounded-lg hover:bg-pink-600/40 transition-colors cursor-pointer z-[50]" data-i18n="addCloud">添加 (云端)</button>
                 </div>
-                <div id="custom-links-container" class="grid grid-cols-2 gap-3"></div>
+                <!-- 容器ID保留，通过JS赋予智能伸缩样式 -->
+                <div id="custom-links-container"></div>
                 <div id="expand-action-wrapper" class="mt-4 pt-2 border-t border-slate-500/10 text-center hidden">
                     <button onclick="toggleExpandCustomLinks()" id="expand-btn" class="text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer inline-flex items-center gap-1">
                         <span data-i18n="expandMore">展开显示更多</span> <i class="fas fa-chevron-down text-[10px]"></i>
@@ -200,7 +203,7 @@
             </div>
 
             <!-- 添加动态分类按钮 (管理员可见) -->
-            <div id="add-section-card" class="admin-only glass-card rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500/50 transition-all border-dashed border-2 border-slate-500/30" onclick="addCustomSection()" style="min-height: 180px;">
+            <div id="add-section-card" class="admin-only glass-card rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500/50 transition-all border-dashed border-2 border-slate-500/30 xl:col-span-1" onclick="addCustomSection()" style="min-height: 180px;">
                 <i class="fas fa-plus text-3xl text-slate-400 mb-2"></i>
                 <span class="text-sm font-medium text-slate-400 mt-1" data-i18n="addSectionBtn">添加自定义区域</span>
             </div>
@@ -247,13 +250,12 @@
         // --- 0. 全局状态与配置 ---
         let currentLang = localStorage.getItem('nav_lang') || 'zh';
         let isCustomLinksExpanded = false;
-        let expandedDynamicSections = {}; // 记录每个动态区域的展开状态
+        let expandedDynamicSections = {}; 
         let currentModalTarget = 'custom'; 
         let currentEngineKey = 'google';
         
         let cloudConfig = { wallpaper: "", dynamicSections: [] };
 
-        // 拖拽控制状态
         let dragType = null; 
         let dragSecId = null; 
         let dragLinkIdx = null;
@@ -432,7 +434,7 @@
             updateCloudConfig('wallpaper', "");
         }
 
-        // --- 4. 动态自定义区域管理 (升级3排和折叠逻辑) ---
+        // --- 4. 动态自定义区域管理 (升级为同宽缩放内聚模式) ---
         function saveDynamicSections(sections) {
             localStorage.setItem('nav_dynamic_sections', JSON.stringify(sections));
             updateCloudConfig('dynamicSections', sections);
@@ -478,26 +480,22 @@
             secs.forEach((sec) => {
                 const isExpanded = !!expandedDynamicSections[sec.id];
                 const linkCount = sec.links.length;
+                const isCompact = linkCount > 6;
 
-                // 核心排版逻辑
-                let cardColSpan = 'xl:col-span-1';
-                let gridCols = 'grid-cols-2';
+                let gridCols = isCompact ? 'grid-cols-3 gap-2' : 'grid-cols-2 gap-3';
                 let visibleLinks = sec.links;
                 let showExpandBtn = false;
 
-                if (linkCount > 6) {
-                    cardColSpan = 'xl:col-span-2'; // 变宽
-                    gridCols = 'grid-cols-2 sm:grid-cols-3'; // 成3排(列)
-                    if (linkCount > 9) {
-                        showExpandBtn = true;
-                        if (!isExpanded) {
-                            visibleLinks = sec.links.slice(0, 9);
-                        }
+                if (linkCount > 9) {
+                    showExpandBtn = true;
+                    if (!isExpanded) {
+                        visibleLinks = sec.links.slice(0, 9);
                     }
                 }
 
                 const card = document.createElement('div');
-                card.className = `dynamic-section-card glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300 relative ${cardColSpan}`;
+                // 永远保持标准的 xl:col-span-1 宽度
+                card.className = "dynamic-section-card glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300 relative xl:col-span-1";
                 card.id = `section-${sec.id}`;
                 card.draggable = true;
                 card.ondragstart = (e) => handleDragStart(e, 'section', sec.id);
@@ -509,25 +507,35 @@
                 if (linkCount === 0) {
                     linksHtml = `<div class="col-span-full text-center text-xs text-slate-400/60 py-4">${t('noCloudLinks')}</div>`;
                 } else {
+                    // 根据模式自适应样式压缩
+                    const pClass = isCompact ? 'p-2' : 'p-3';
+                    const spaceXClass = isCompact ? 'space-x-1.5' : 'space-x-2.5';
+                    const iconSizeClass = isCompact ? 'w-4 h-4 text-[9px]' : 'w-5 h-5 text-[10px]';
+                    const imgSizeClass = isCompact ? 'w-4 h-4' : 'w-5 h-5';
+                    const textSizeClass = isCompact ? 'text-[11px]' : 'text-sm';
+                    const prClass = isCompact ? 'pr-4' : 'pr-5';
+                    const dragMrClass = isCompact ? 'mr-1.5' : 'mr-2.5';
+                    const btnClass = isCompact ? 'right-1 text-[10px] px-1 py-0.5' : 'right-2 text-xs p-1';
+
                     visibleLinks.forEach((link, idx) => {
                         const displayName = getLocalizedLinkName(link.name, link.url);
-                        let displayIcon = `<div class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
-                        try { if(link.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(link.url).hostname}" onerror="this.style.display='none'" class="w-5 h-5 rounded object-contain shrink-0" alt="icon" />`; } catch(e){}
+                        let displayIcon = `<div class="${iconSizeClass} rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
+                        try { if(link.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(link.url).hostname}" onerror="this.style.display='none'" class="${imgSizeClass} rounded object-contain shrink-0" alt="icon" />`; } catch(e){}
 
                         linksHtml += `
-                        <div class="group relative flex items-center justify-between p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all"
+                        <div class="group relative flex items-center justify-between ${pClass} bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all"
                              draggable="true"
                              ondragstart="handleDragStart(event, 'link', '${sec.id}', ${idx})"
                              ondragend="handleDragEnd(event)"
                              ondragover="handleDragOver(event, 'link')"
                              ondrop="handleDrop(event, 'link', '${sec.id}', ${idx})">
-                            <div class="flex items-center w-full">
-                                <i class="fas fa-grip-vertical text-slate-500 opacity-0 group-hover:opacity-50 transition-opacity mr-2.5 cursor-move admin-only text-xs"></i>
-                                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2.5 truncate w-full pr-5">
-                                    ${displayIcon} <span class="text-sm font-medium truncate">${displayName}</span>
+                            <div class="flex items-center w-full overflow-hidden">
+                                <i class="fas fa-grip-vertical text-slate-500 opacity-0 group-hover:opacity-50 transition-opacity ${dragMrClass} cursor-move admin-only text-[10px] shrink-0"></i>
+                                <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex items-center ${spaceXClass} truncate w-full ${prClass}">
+                                    ${displayIcon} <span class="${textSizeClass} font-medium truncate">${displayName}</span>
                                 </a>
                             </div>
-                            <button type="button" onclick="deleteSectionLink(event, '${sec.id}', ${idx})" class="admin-only absolute right-2 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-slate-500/20 p-1 rounded cursor-pointer"><i class="fas fa-trash-alt"></i></button>
+                            <button type="button" onclick="deleteSectionLink(event, '${sec.id}', ${idx})" class="admin-only absolute ${btnClass} text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-500/20 rounded cursor-pointer shrink-0"><i class="fas fa-trash-alt"></i></button>
                         </div>`;
                     });
                 }
@@ -552,13 +560,13 @@
                             <i class="fas fa-grip-vertical mr-2 text-slate-500 opacity-60 admin-only text-sm"></i>
                             <i class="fas fa-layer-group mr-2.5"></i> <span>${sec.title}</span>
                         </h3>
-                        <div class="flex gap-2">
-                            <button type="button" onclick="openLinkModal('section_${sec.id}')" class="admin-only text-xs px-2.5 py-1 bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-lg hover:bg-indigo-600/40 transition-colors cursor-pointer z-[50]">${t('addCloud')}</button>
-                            <button type="button" onclick="renameCustomSection('${sec.id}')" class="admin-only text-xs px-2 py-1 bg-sky-600/20 text-sky-400 border border-sky-500/20 rounded-lg hover:bg-sky-600/40 transition-colors cursor-pointer z-[50]"><i class="fas fa-pen"></i></button>
-                            <button type="button" onclick="deleteCustomSection('${sec.id}')" class="admin-only text-xs px-2 py-1 bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-600/40 transition-colors cursor-pointer z-[50]"><i class="fas fa-trash"></i></button>
+                        <div class="flex gap-1.5 shrink-0 ml-2">
+                            <button type="button" onclick="openLinkModal('section_${sec.id}')" class="admin-only text-[10px] px-2 py-1 bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-md hover:bg-indigo-600/40 transition-colors cursor-pointer z-[50]">${t('addCloud')}</button>
+                            <button type="button" onclick="renameCustomSection('${sec.id}')" class="admin-only text-[10px] px-2 py-1 bg-sky-600/20 text-sky-400 border border-sky-500/20 rounded-md hover:bg-sky-600/40 transition-colors cursor-pointer z-[50]"><i class="fas fa-pen"></i></button>
+                            <button type="button" onclick="deleteCustomSection('${sec.id}')" class="admin-only text-[10px] px-2 py-1 bg-red-600/20 text-red-400 border border-red-500/20 rounded-md hover:bg-red-600/40 transition-colors cursor-pointer z-[50]"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                    <div class="grid ${gridCols} gap-3" style="min-height: 40px;" ondragover="handleDragOver(event, 'section')" ondrop="handleDrop(event, 'section', '${sec.id}')">
+                    <div class="grid ${gridCols}" style="min-height: 40px;" ondragover="handleDragOver(event, 'section')" ondrop="handleDrop(event, 'section', '${sec.id}')">
                         ${linksHtml}
                     </div>
                     ${expandHtml}
@@ -618,7 +626,7 @@
         function toggleEngineMenu(e) { e.stopPropagation(); document.getElementById('engine-menu').classList.toggle('hidden'); }
         function selectEngine(key) { currentEngineKey = key; const form = document.getElementById('search-form'); const input = document.getElementById('search-input'); const icon = document.getElementById('engine-icon'); form.action = engines[key].action; input.name = engines[key].name; input.setAttribute('data-i18n-placeholder', engines[key].placeholderKey); input.placeholder = t(engines[key].placeholderKey); icon.className = engines[key].icon; document.getElementById('engine-menu').classList.add('hidden'); }
 
-        // --- 8. 原站长推荐 (同步应用排版逻辑) ---
+        // --- 8. 原站长推荐 (应用同样的等宽压缩逻辑) ---
         function openLinkModal(target) { currentModalTarget = target; const textEl = document.getElementById('modal-title-text'); if(target === 'friend') textEl.innerText = t('modalAddFriend'); else if(target === 'custom') textEl.innerText = t('modalAddCloud'); else textEl.innerText = t('modalAddSection'); toggleModal(true); }
         function toggleModal(show) { const modal = document.getElementById('modal'); if (show) { document.getElementById('site-name').value = ''; document.getElementById('site-url').value = ''; modal.classList.remove('hidden'); } else { modal.classList.add('hidden'); } }
         function closeModalOnBlank(e) { if(e.target.id === 'modal') toggleModal(false); }
@@ -640,21 +648,20 @@
         }
 
         async function loadCustomLinks() {
-            const container = document.getElementById('custom-links-container'); const actionWrapper = document.getElementById('expand-action-wrapper'); const mainGrid = document.getElementById('main-nav-grid'); const customCard = document.getElementById('card-custom');
+            const container = document.getElementById('custom-links-container'); const actionWrapper = document.getElementById('expand-action-wrapper');
             container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10"><i class="fas fa-spinner fa-spin"></i> ${t('loadingCloud')}</div>`;
             let links = []; try { const res = await fetch('/api/links'); if(res.ok) links = await res.json(); else throw new Error(); } catch(e) { links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]'); }
             container.innerHTML = '';
             
-            if(links.length === 0) { container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10">${t('noCloudLinks')}</div>`; actionWrapper.classList.add('hidden'); resetCustomLayout(mainGrid, customCard, container); return; }
-            
-            // 同样应用超6个变宽版3列的逻辑
-            if (links.length > 6) { 
-                mainGrid.classList.remove('xl:grid-cols-3'); mainGrid.classList.add('xl:grid-cols-4'); 
-                customCard.classList.remove('xl:col-span-1'); customCard.classList.add('xl:col-span-2'); 
-                container.classList.remove('grid-cols-2'); container.classList.add('grid-cols-2', 'sm:grid-cols-3'); 
-            } else { 
-                resetCustomLayout(mainGrid, customCard, container); 
+            if(links.length === 0) { 
+                container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10">${t('noCloudLinks')}</div>`; 
+                actionWrapper.classList.add('hidden'); 
+                container.className = 'grid grid-cols-2 gap-3';
+                return; 
             }
+
+            const isCompact = links.length > 6;
+            container.className = isCompact ? 'grid grid-cols-3 gap-2' : 'grid grid-cols-2 gap-3';
 
             let visibleLinks = links;
             let showExpandBtn = false;
@@ -664,16 +671,27 @@
                 if (!isCustomLinksExpanded) visibleLinks = links.slice(0, 9);
             }
 
+            const pClass = isCompact ? 'p-2' : 'p-3';
+            const spaceXClass = isCompact ? 'space-x-1.5' : 'space-x-2.5';
+            const iconSizeClass = isCompact ? 'w-4 h-4 text-[9px]' : 'w-5 h-5 text-[10px]';
+            const imgSizeClass = isCompact ? 'w-4 h-4' : 'w-5 h-5';
+            const textSizeClass = isCompact ? 'text-[11px]' : 'text-sm';
+            const prClass = isCompact ? 'pr-4' : 'pr-5';
+            const btnClass = isCompact ? 'right-1 text-[10px] px-1 py-0.5' : 'right-2 text-xs p-1';
+
             visibleLinks.forEach((item, index) => {
                 const displayName = getLocalizedLinkName(item.name, item.url);
-                let displayIcon = `<div class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
-                try { if(item.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(item.url).hostname}" onerror="this.style.display='none'" class="w-5 h-5 rounded object-contain shrink-0" alt="icon" />`; } catch(err){}
+                let displayIcon = `<div class="${iconSizeClass} rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
+                try { if(item.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(item.url).hostname}" onerror="this.style.display='none'" class="${imgSizeClass} rounded object-contain shrink-0" alt="icon" />`; } catch(err){}
+                
                 container.innerHTML += `
-                    <div class="group relative flex items-center justify-between p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all">
-                        <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2.5 truncate w-full pr-5">
-                            ${displayIcon} <span class="text-sm font-medium truncate">${displayName}</span>
-                        </a>
-                        <button type="button" onclick="deleteCustomLink(event, ${index})" class="admin-only absolute right-2 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-slate-500/20 p-1 rounded cursor-pointer"><i class="fas fa-trash-alt"></i></button>
+                    <div class="group relative flex items-center justify-between ${pClass} bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all">
+                        <div class="flex items-center w-full overflow-hidden">
+                            <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="flex items-center ${spaceXClass} truncate w-full ${prClass}">
+                                ${displayIcon} <span class="${textSizeClass} font-medium truncate">${displayName}</span>
+                            </a>
+                        </div>
+                        <button type="button" onclick="deleteCustomLink(event, ${index})" class="admin-only absolute ${btnClass} text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-500/20 rounded cursor-pointer shrink-0"><i class="fas fa-trash-alt"></i></button>
                     </div>`;
             });
 
@@ -684,7 +702,6 @@
             } else { actionWrapper.classList.add('hidden'); }
         }
 
-        function resetCustomLayout(mainGrid, customCard, container) { mainGrid.classList.remove('xl:grid-cols-4'); mainGrid.classList.add('xl:grid-cols-3'); customCard.classList.remove('xl:col-span-2'); customCard.classList.add('xl:col-span-1'); container.classList.remove('sm:grid-cols-3'); container.classList.add('grid-cols-2'); }
         function toggleExpandCustomLinks() { isCustomLinksExpanded = !isCustomLinksExpanded; loadCustomLinks(); }
         async function deleteCustomLink(e, index) { e.preventDefault(); e.stopPropagation(); if(!confirm(t('delConfirm'))) return; try { const res = await fetch('/api/links'); let links = res.ok ? await res.json() : JSON.parse(localStorage.getItem('nav_custom_links') || '[]'); links.splice(index, 1); await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(links) }); localStorage.setItem('nav_custom_links', JSON.stringify(links)); if(links.length <= 9) isCustomLinksExpanded = false; loadCustomLinks(); } catch(error) { const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]'); links.splice(index, 1); localStorage.setItem('nav_custom_links', JSON.stringify(links)); if(links.length <= 9) isCustomLinksExpanded = false; loadCustomLinks(); } }
 
