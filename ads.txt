@@ -1,0 +1,3 @@
+# Google AdSense 授权验证文件
+# 请将下方的 pub-XXXXXXXXXXXXXXXX 替换为你实际的发布商 ID
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
