@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- SEO 优化 -->
-    <meta name="description" content="科技共享-智能多功能响应式导航。提供高效的搜索、自定义网址管理、动态天气与专属壁纸等个性化功能。">
-    <meta name="keywords" content="网址导航, 科技共享, 开发者导航, 智能导航, 响应式网站">
+    <meta name="description" content="科技共享-智能多功能响应式导航。提供高效的搜索、云端自定义网址管理、动态天气与专属壁纸等个性化功能。">
+    <meta name="keywords" content="网址导航, 科技共享, 开发者导航, 智能导航, 响应式网站, 云端同步">
     
     <title>科技共享-智能多功能响应式导航</title>
     
@@ -86,7 +86,7 @@
             <i id="theme-icon" class="fas fa-palette text-sm"></i>
         </button>
         <div id="theme-panel" class="absolute right-0 top-full mt-2 w-60 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl hidden backdrop-blur-md p-4 space-y-3 z-[160]" onclick="event.stopPropagation()">
-            <div class="text-xs font-bold text-slate-400 px-1">基础色彩模式</div>
+            <div class="text-xs font-bold text-slate-400 px-1">基础色彩模式 (本地偏好)</div>
             <div class="flex gap-2">
                 <button onclick="setBaseTheme('theme-light')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-sun text-amber-500"></i> 日间</button>
                 <button onclick="setBaseTheme('theme-dark')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-moon text-indigo-400"></i> 夜间</button>
@@ -94,7 +94,7 @@
             
             <div class="admin-only space-y-1.5 px-1 border-t border-slate-800 pt-3">
                 <div class="flex justify-between items-center">
-                    <label class="text-xs text-slate-400 font-bold">自定义背景图片</label>
+                    <label class="text-xs text-slate-400 font-bold">自定义背景图片 (仅本地生效)</label>
                     <button onclick="clearCustomBg()" id="clear-bg-btn" class="text-[10px] text-red-400 hover:underline hidden">清除壁纸</button>
                 </div>
                 <div class="flex gap-1.5">
@@ -179,7 +179,7 @@
             <div id="card-custom" class="glass-card rounded-2xl p-6 shadow-xl hover:border-pink-500/30 transition-all duration-300 xl:col-span-1">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-pink-400 flex items-center"><i class="fas fa-folder-plus mr-2.5"></i> 站长推荐</h3>
-                    <button type="button" onclick="openLinkModal('custom')" class="admin-only text-xs px-2.5 py-1 bg-pink-600/20 text-pink-400 border border-pink-500/20 rounded-lg hover:bg-pink-600/40 transition-colors cursor-pointer z-[50]">添加</button>
+                    <button type="button" onclick="openLinkModal('custom')" class="admin-only text-xs px-2.5 py-1 bg-pink-600/20 text-pink-400 border border-pink-500/20 rounded-lg hover:bg-pink-600/40 transition-colors cursor-pointer z-[50]">添加 (云端)</button>
                 </div>
                 <div id="custom-links-container" class="grid grid-cols-2 gap-3">
                 </div>
@@ -196,7 +196,7 @@
             <div class="glass-card rounded-2xl p-6 shadow-xl hover:border-emerald-500/20 transition-all duration-300">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-base font-semibold text-emerald-400 flex items-center"><i class="fas fa-handshake mr-2.5"></i> 友情链接</h3>
-                    <button type="button" onclick="openLinkModal('friend')" class="admin-only text-xs px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-600/40 transition-colors cursor-pointer z-[50]">申请互换</button>
+                    <button type="button" onclick="openLinkModal('friend')" class="admin-only text-xs px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-600/40 transition-colors cursor-pointer z-[50]">添加 (本地)</button>
                 </div>
                 <div id="friend-links-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
                 </div>
@@ -211,7 +211,7 @@
     <!-- 弹窗模态框 -->
     <div id="modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[300]" onclick="closeModalOnBlank(event)">
         <div class="bg-slate-900 border border-slate-700/80 p-6 rounded-2xl w-full max-w-sm shadow-2xl text-slate-100" onclick="event.stopPropagation()">
-            <h4 id="modal-title" class="text-md font-semibold text-slate-200 mb-4 flex items-center"><i class="fas fa-link mr-2 text-indigo-400"></i>添加自定义导航</h4>
+            <h4 id="modal-title" class="text-md font-semibold text-slate-200 mb-4 flex items-center"><i class="fas fa-link mr-2 text-indigo-400"></i>添加网址</h4>
             <div class="space-y-4 mb-6">
                 <div>
                     <label class="text-xs text-slate-400 block mb-1.5 font-medium">网站名称</label>
@@ -276,7 +276,7 @@
             document.getElementById('theme-panel').classList.add('hidden');
         }
 
-        // --- 1. 跨会话本地持久化主题与自定义专属壁纸控制中心 ---
+        // --- 1. 跨会话本地持久化主题与自定义专属壁纸 (保留本地缓存，按设备生效) ---
         function initTheme() {
             const savedTheme = localStorage.getItem('nav_theme_mode') || 'theme-dark';
             document.body.classList.remove('theme-light', 'theme-dark');
@@ -453,7 +453,7 @@
             if(target === 'friend') {
                 modalTitle.innerHTML = `<i class="fas fa-handshake mr-2 text-emerald-400"></i>添加友情链接`;
             } else {
-                modalTitle.innerHTML = `<i class="fas fa-link mr-2 text-pink-400"></i>添加自定义导航`;
+                modalTitle.innerHTML = `<i class="fas fa-link mr-2 text-pink-400"></i>添加云端站长推荐`;
             }
             toggleModal(true);
         }
@@ -473,7 +473,7 @@
             if(e.target.id === 'modal') toggleModal(false);
         }
 
-        function saveActiveLink() {
+        async function saveActiveLink() {
             const name = document.getElementById('site-name').value.trim();
             let url = document.getElementById('site-url').value.trim();
             
@@ -486,28 +486,75 @@
             }
 
             if(currentModalTarget === 'friend') {
+                // 友情链接：依然保存在本地缓存
                 const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
                 links.push({ name, url });
                 localStorage.setItem('nav_friend_links', JSON.stringify(links));
                 loadFriendLinks();
             } else {
-                const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
-                links.push({ name, url });
-                localStorage.setItem('nav_custom_links', JSON.stringify(links));
-                loadCustomLinks();
+                // 站长推荐：同步至云端数据库
+                try {
+                    // 1. 获取最新云端数据
+                    const res = await fetch('/api/links');
+                    let links = [];
+                    if(res.ok) {
+                        links = await res.json();
+                    } else {
+                        // 如果接口异常，回退使用本地数组结构
+                        links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
+                    }
+                    
+                    // 2. 添加新链接
+                    links.push({ name, url });
+                    
+                    // 3. 提交给云端后端
+                    await fetch('/api/links', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(links)
+                    });
+                    
+                    // 容灾处理：同步备份到本地，以防云端宕机
+                    localStorage.setItem('nav_custom_links', JSON.stringify(links));
+                    
+                    loadCustomLinks();
+                } catch (error) {
+                    console.error(error);
+                    alert("云端保存失败，请检查是否已在 Cloudflare 配置 KV 数据库！\n（当前已自动降级保存至本地缓存）");
+                    // 降级处理
+                    const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
+                    links.push({ name, url });
+                    localStorage.setItem('nav_custom_links', JSON.stringify(links));
+                    loadCustomLinks();
+                }
             }
             
             toggleModal(false);
         }
 
-        // --- 6. 自定义快捷链接动态折叠与升级网格排版系统 ---
-        function loadCustomLinks() {
+        // --- 6. 自定义快捷链接动态折叠与接入后端云 API ---
+        async function loadCustomLinks() {
             const container = document.getElementById('custom-links-container');
             const actionWrapper = document.getElementById('expand-action-wrapper');
             const mainGrid = document.getElementById('main-nav-grid');
             const customCard = document.getElementById('card-custom');
             
-            const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
+            container.innerHTML = '<div class="col-span-full text-center text-xs text-slate-400/60 py-10"><i class="fas fa-spinner fa-spin"></i> 正在从云端加载...</div>';
+            
+            let links = [];
+            try {
+                // 核心改动：从云端 API 拉取数据
+                const res = await fetch('/api/links');
+                if(res.ok) {
+                    links = await res.json();
+                } else {
+                    throw new Error("云端接口未配置");
+                }
+            } catch(e) {
+                console.warn("未连接到云端数据库，已降级读取本地缓存");
+                links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
+            }
+            
             container.innerHTML = '';
             
             if(links.length === 0) {
@@ -581,17 +628,48 @@
             loadCustomLinks();
         }
 
-        function deleteCustomLink(e, index) {
+        async function deleteCustomLink(e, index) {
             e.preventDefault();
             e.stopPropagation();
-            const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
-            links.splice(index, 1);
-            localStorage.setItem('nav_custom_links', JSON.stringify(links));
-            if(links.length <= 6) isCustomLinksExpanded = false;
-            loadCustomLinks();
+            
+            if(!confirm("确定要删除这个云端链接吗？")) return;
+
+            try {
+                // 1. 获取现有数组
+                const res = await fetch('/api/links');
+                let links = [];
+                if(res.ok) {
+                    links = await res.json();
+                } else {
+                    links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
+                }
+                
+                // 2. 删除元素
+                links.splice(index, 1);
+                
+                // 3. 同步回云端
+                await fetch('/api/links', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(links)
+                });
+                
+                localStorage.setItem('nav_custom_links', JSON.stringify(links));
+                
+                if(links.length <= 6) isCustomLinksExpanded = false;
+                loadCustomLinks();
+            } catch(error) {
+                console.error(error);
+                // 降级删除本地缓存
+                const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
+                links.splice(index, 1);
+                localStorage.setItem('nav_custom_links', JSON.stringify(links));
+                if(links.length <= 6) isCustomLinksExpanded = false;
+                loadCustomLinks();
+            }
         }
 
-        // --- 7. 友情链接加载与管理模块 ---
+        // --- 7. 友情链接加载与管理模块 (依然使用本地缓存机制) ---
         function loadFriendLinks() {
             const container = document.getElementById('friend-links-container');
             const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
