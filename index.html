@@ -7,7 +7,7 @@
     <meta name="description" content="科技共享-智能多功能响应式导航。提供高效的搜索、云端自定义网址管理、动态天气与专属壁纸等个性化功能。">
     <meta name="keywords" content="网址导航, 科技共享, 开发者导航, 智能导航, 响应式网站, 云端同步">
     
-    <title>科技共享-智能多功能响应式导航</title>
+    <title id="page-title">科技共享-智能多功能响应式导航</title>
     
     <!-- 性能优化：DNS 预解析与预连接 -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
@@ -86,25 +86,35 @@
             <i id="theme-icon" class="fas fa-palette text-sm"></i>
         </button>
         <div id="theme-panel" class="absolute right-0 top-full mt-2 w-60 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl hidden backdrop-blur-md p-4 space-y-3 z-[160]" onclick="event.stopPropagation()">
-            <div class="text-xs font-bold text-slate-400 px-1">基础色彩模式 (本地偏好)</div>
+            <!-- 语言切换 -->
+            <div class="text-[11px] font-bold text-slate-400 px-1 mb-1.5" data-i18n="langTitle">语言 / Language</div>
+            <div class="flex gap-2 mb-3 border-b border-slate-800 pb-3">
+                <button onclick="setLanguage('zh')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer">中文</button>
+                <button onclick="setLanguage('en')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer">English</button>
+            </div>
+
+            <!-- 主题切换 -->
+            <div class="text-[11px] font-bold text-slate-400 px-1" data-i18n="themeTitle">基础色彩模式 (本地偏好)</div>
             <div class="flex gap-2">
-                <button onclick="setBaseTheme('theme-light')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-sun text-amber-500"></i> 日间</button>
-                <button onclick="setBaseTheme('theme-dark')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-moon text-indigo-400"></i> 夜间</button>
+                <button onclick="setBaseTheme('theme-light')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-sun text-amber-500"></i> <span data-i18n="themeLight">日间</span></button>
+                <button onclick="setBaseTheme('theme-dark')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-moon text-indigo-400"></i> <span data-i18n="themeDark">夜间</span></button>
             </div>
             
-            <div class="admin-only space-y-1.5 px-1 border-t border-slate-800 pt-3">
+            <!-- 壁纸设置 (管理员) -->
+            <div class="admin-only space-y-1.5 px-1 border-t border-slate-800 pt-3 mt-1">
                 <div class="flex justify-between items-center">
-                    <label class="text-xs text-slate-400 font-bold">自定义背景图片 (仅本地生效)</label>
-                    <button onclick="clearCustomBg()" id="clear-bg-btn" class="text-[10px] text-red-400 hover:underline hidden">清除壁纸</button>
+                    <label class="text-[11px] text-slate-400 font-bold" data-i18n="bgTitle">自定义背景 (本地生效)</label>
+                    <button onclick="clearCustomBg()" id="clear-bg-btn" class="text-[10px] text-red-400 hover:underline hidden" data-i18n="clearBg">清除壁纸</button>
                 </div>
                 <div class="flex gap-1.5">
-                    <input type="text" id="custom-bg-input" placeholder="输入图片网址 https://..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
-                    <button onclick="applyCustomBg()" class="bg-indigo-600 text-white px-2 py-1 rounded-lg text-xs hover:bg-indigo-500 cursor-pointer shrink-0">应用</button>
+                    <input type="text" id="custom-bg-input" data-i18n-placeholder="bgInputPlace" placeholder="输入图片网址 https://..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                    <button onclick="applyCustomBg()" class="bg-indigo-600 text-white px-2 py-1 rounded-lg text-xs hover:bg-indigo-500 cursor-pointer shrink-0" data-i18n="applyBtn">应用</button>
                 </div>
             </div>
 
-            <div class="admin-only border-t border-slate-800 pt-2">
-                <button onclick="logoutAdmin()" class="w-full py-1 rounded-lg bg-red-950/40 border border-red-900/40 text-red-400 text-[11px] text-center hover:bg-red-900/40 transition-colors cursor-pointer">退出后台管理</button>
+            <!-- 退出管理 -->
+            <div class="admin-only border-t border-slate-800 pt-2 mt-1">
+                <button onclick="logoutAdmin()" class="w-full py-1 rounded-lg bg-red-950/40 border border-red-900/40 text-red-400 text-[11px] text-center hover:bg-red-900/40 transition-colors cursor-pointer" data-i18n="logoutBtn">退出后台管理</button>
             </div>
         </div>
     </div>
@@ -118,7 +128,7 @@
                 <span id="greeting" class="text-indigo-400">正在筹备问候语...</span>
                 <span class="opacity-30">|</span>
                 <span id="weather-info" class="flex items-center gap-1.5 text-emerald-400">
-                    <i class="fas fa-spinner fa-spin text-xs"></i> 正在定位测算天气...
+                    <i class="fas fa-spinner fa-spin text-xs"></i> <span data-i18n="weatherLoading">正在定位测算天气...</span>
                 </span>
             </div>
         </div>
@@ -134,14 +144,14 @@
                             <i class="fas fa-chevron-down text-xs opacity-50"></i>
                         </button>
                         <div id="engine-menu" class="absolute left-2 top-full mt-2 w-36 bg-slate-950/95 border border-slate-800 rounded-xl shadow-2xl hidden backdrop-blur-md overflow-hidden z-[110]">
-                            <button type="button" onclick="selectEngine('google')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fab fa-google text-blue-400"></i> <span>谷歌 Google</span></button>
-                            <button type="button" onclick="selectEngine('bing')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fab fa-microsoft text-teal-400"></i> <span>必应 Bing</span></button>
-                            <button type="button" onclick="selectEngine('baidu')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fas fa-paw text-red-400"></i> <span>百度 Baidu</span></button>
+                            <button type="button" onclick="selectEngine('google')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fab fa-google text-blue-400"></i> <span data-i18n="enGoogle">谷歌 Google</span></button>
+                            <button type="button" onclick="selectEngine('bing')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fab fa-microsoft text-teal-400"></i> <span data-i18n="enBing">必应 Bing</span></button>
+                            <button type="button" onclick="selectEngine('baidu')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fas fa-paw text-red-400"></i> <span data-i18n="enBaidu">百度 Baidu</span></button>
                             <button type="button" onclick="selectEngine('github')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fab fa-github text-slate-400"></i> <span>GitHub</span></button>
                         </div>
                     </div>
 
-                    <input type="text" id="search-input" name="q" placeholder="在 Google 中搜索..." autocomplete="off" class="w-full bg-transparent border-none py-4 px-3 focus:outline-none focus:ring-0 text-base">
+                    <input type="text" id="search-input" name="q" data-i18n-placeholder="searchGoogle" placeholder="在 Google 中搜索..." autocomplete="off" class="w-full bg-transparent border-none py-4 px-3 focus:outline-none focus:ring-0 text-base">
                     <button type="submit" aria-label="搜索" class="mr-3 p-2.5 text-slate-400 hover:text-indigo-400 transition-colors">
                         <i class="fas fa-search text-lg"></i>
                     </button>
@@ -153,23 +163,23 @@
         <div id="main-nav-grid" class="w-full grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8 relative z-10 items-start">
             
             <div id="card-recommend" class="glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300">
-                <h3 class="text-lg font-semibold text-indigo-400 mb-4 flex items-center"><i class="fas fa-star mr-2.5"></i> 常用推荐</h3>
+                <h3 class="text-lg font-semibold text-indigo-400 mb-4 flex items-center"><i class="fas fa-star mr-2.5"></i> <span data-i18n="cardRec">常用推荐</span></h3>
                 <div class="grid grid-cols-2 gap-3">
                     <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-github text-xl text-slate-400"></i> <span class="text-sm font-medium">GitHub</span></a>
                     <a href="https://www.youtube.com/@kejigongxiang" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-youtube text-xl text-red-500"></i> <span class="text-sm font-medium">YouTube</span></a>
-                    <a href="https://kjgx668.blogspot.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fas fa-globe text-xl text-blue-400"></i> <span class="text-sm font-medium">科技共享博客</span></a>
-                    <a href="https://x.com/kejigongxiang" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fas fa-tv text-xl text-pink-400"></i> <span class="text-sm font-medium">哔哩哔哩</span></a>
-                    <a href="https://www.zhihu.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-zhihu text-xl text-blue-500"></i> <span class="text-sm font-medium">知乎</span></a>
-                    <a href="https://weibo.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-weibo text-xl text-red-400"></i> <span class="text-sm font-medium">微博</span></a>
+                    <a href="https://kjgx668.blogspot.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fas fa-globe text-xl text-blue-400"></i> <span class="text-sm font-medium" data-i18n="linkBlog">科技共享博客</span></a>
+                    <a href="https://x.com/kejigongxiang" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fas fa-tv text-xl text-pink-400"></i> <span class="text-sm font-medium" data-i18n="linkBili">哔哩哔哩</span></a>
+                    <a href="https://www.zhihu.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-zhihu text-xl text-blue-500"></i> <span class="text-sm font-medium" data-i18n="linkZhihu">知乎</span></a>
+                    <a href="https://weibo.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-weibo text-xl text-red-400"></i> <span class="text-sm font-medium" data-i18n="linkWeibo">微博</span></a>
                 </div>
             </div>
 
             <div id="card-develop" class="glass-card rounded-2xl p-6 shadow-xl hover:border-purple-500/30 transition-all duration-300">
-                <h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center"><i class="fas fa-code mr-2.5"></i> 效率与开发</h3>
+                <h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center"><i class="fas fa-code mr-2.5"></i> <span data-i18n="cardDev">效率与开发</span></h3>
                 <div class="grid grid-cols-2 gap-3">
                     <a href="https://dash.cloudflare.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-cloud text-xl text-orange-400"></i> <span class="text-sm font-medium">Cloudflare</span></a>
                     <a href="https://chatgpt.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-robot text-xl text-emerald-400"></i> <span class="text-sm font-medium">ChatGPT</span></a>
-                    <a href="https://juejin.cn" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-book text-xl text-blue-500"></i> <span class="text-sm font-medium">稀土掘金</span></a>
+                    <a href="https://juejin.cn" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-book text-xl text-blue-500"></i> <span class="text-sm font-medium" data-i18n="linkJuejin">稀土掘金</span></a>
                     <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-triangle-exclamation text-xl"></i> <span class="text-sm font-medium">Vercel</span></a>
                     <a href="https://stackoverflow.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fab fa-stack-overflow text-xl text-orange-500"></i> <span class="text-sm font-medium">StackOverflow</span></a>
                     <a href="https://caniuse.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-browser text-xl text-sky-400"></i> <span class="text-sm font-medium">CanIUse</span></a>
@@ -178,14 +188,14 @@
 
             <div id="card-custom" class="glass-card rounded-2xl p-6 shadow-xl hover:border-pink-500/30 transition-all duration-300 xl:col-span-1">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-pink-400 flex items-center"><i class="fas fa-folder-plus mr-2.5"></i> 站长推荐</h3>
-                    <button type="button" onclick="openLinkModal('custom')" class="admin-only text-xs px-2.5 py-1 bg-pink-600/20 text-pink-400 border border-pink-500/20 rounded-lg hover:bg-pink-600/40 transition-colors cursor-pointer z-[50]">添加 (云端)</button>
+                    <h3 class="text-lg font-semibold text-pink-400 flex items-center"><i class="fas fa-folder-plus mr-2.5"></i> <span data-i18n="cardCustom">站长推荐</span></h3>
+                    <button type="button" onclick="openLinkModal('custom')" class="admin-only text-xs px-2.5 py-1 bg-pink-600/20 text-pink-400 border border-pink-500/20 rounded-lg hover:bg-pink-600/40 transition-colors cursor-pointer z-[50]" data-i18n="addCloud">添加 (云端)</button>
                 </div>
                 <div id="custom-links-container" class="grid grid-cols-2 gap-3">
                 </div>
                 <div id="expand-action-wrapper" class="mt-4 pt-2 border-t border-slate-500/10 text-center hidden">
                     <button onclick="toggleExpandCustomLinks()" id="expand-btn" class="text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer inline-flex items-center gap-1">
-                        <span>展开显示更多</span> <i class="fas fa-chevron-down text-[10px]"></i>
+                        <span data-i18n="expandMore">展开显示更多</span> <i class="fas fa-chevron-down text-[10px]"></i>
                     </button>
                 </div>
             </div>
@@ -195,46 +205,123 @@
         <div class="w-full relative z-10 mb-12">
             <div class="glass-card rounded-2xl p-6 shadow-xl hover:border-emerald-500/20 transition-all duration-300">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base font-semibold text-emerald-400 flex items-center"><i class="fas fa-handshake mr-2.5"></i> 友情链接</h3>
-                    <button type="button" onclick="openLinkModal('friend')" class="admin-only text-xs px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-600/40 transition-colors cursor-pointer z-[50]">添加 (本地)</button>
+                    <h3 class="text-base font-semibold text-emerald-400 flex items-center"><i class="fas fa-handshake mr-2.5"></i> <span data-i18n="cardFriend">友情链接</span></h3>
+                    <button type="button" onclick="openLinkModal('friend')" class="admin-only text-xs px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-600/40 transition-colors cursor-pointer z-[50]" data-i18n="addLocal">添加 (本地)</button>
                 </div>
                 <div id="friend-links-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
                 </div>
             </div>
         </div>
 
-        <footer id="admin-trigger" ondblclick="triggerAdminLogin()" class="text-slate-500 text-xs mt-4 cursor-pointer select-none tracking-wide hover:text-indigo-400/70 transition-colors" title="管理后台入口（双击进入）">
-            &copy; 2026 科技共享-智能生态导航 · Powered by Cloudflare Drop <span id="admin-badge" class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold hidden">已登入</span>
+        <footer id="admin-trigger" ondblclick="triggerAdminLogin()" class="text-slate-500 text-xs mt-4 cursor-pointer select-none tracking-wide hover:text-indigo-400/70 transition-colors" title="后台入口 (双击 / Double Click)">
+            <span data-i18n="footerText">&copy; 2026 科技共享-智能生态导航 · Powered by Cloudflare</span> <span id="admin-badge" class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold hidden" data-i18n="adminBadge">已登入</span>
         </footer>
     </div>
 
     <!-- 弹窗模态框 -->
     <div id="modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[300]" onclick="closeModalOnBlank(event)">
         <div class="bg-slate-900 border border-slate-700/80 p-6 rounded-2xl w-full max-w-sm shadow-2xl text-slate-100" onclick="event.stopPropagation()">
-            <h4 id="modal-title" class="text-md font-semibold text-slate-200 mb-4 flex items-center"><i class="fas fa-link mr-2 text-indigo-400"></i>添加网址</h4>
+            <h4 id="modal-title" class="text-md font-semibold text-slate-200 mb-4 flex items-center"><i class="fas fa-link mr-2 text-indigo-400"></i><span id="modal-title-text">添加网址</span></h4>
             <div class="space-y-4 mb-6">
                 <div>
-                    <label class="text-xs text-slate-400 block mb-1.5 font-medium">网站名称</label>
-                    <input type="text" id="site-name" placeholder="例如：百度" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-all">
+                    <label class="text-xs text-slate-400 block mb-1.5 font-medium" data-i18n="siteName">网站名称</label>
+                    <input type="text" id="site-name" data-i18n-placeholder="siteNamePlace" placeholder="例如：百度" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-all">
                 </div>
                 <div>
-                    <label class="text-xs text-slate-400 block mb-1.5 font-medium">网站网址 (URL)</label>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-medium" data-i18n="siteUrl">网站网址 (URL)</label>
                     <input type="text" id="site-url" placeholder="www.baidu.com" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-all">
                 </div>
             </div>
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="toggleModal(false)" class="px-4 py-2 bg-slate-800 text-slate-400 text-xs font-medium rounded-xl hover:bg-slate-700 transition-colors cursor-pointer">取消</button>
-                <button type="button" onclick="saveActiveLink()" class="px-4 py-2 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:bg-indigo-500 transition-colors cursor-pointer shadow-lg shadow-indigo-600/20">保存站点</button>
+                <button type="button" onclick="toggleModal(false)" class="px-4 py-2 bg-slate-800 text-slate-400 text-xs font-medium rounded-xl hover:bg-slate-700 transition-colors cursor-pointer" data-i18n="btnCancel">取消</button>
+                <button type="button" onclick="saveActiveLink()" class="px-4 py-2 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:bg-indigo-500 transition-colors cursor-pointer shadow-lg shadow-indigo-600/20" data-i18n="btnSave">保存站点</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 全局控制状态
+        // --- 0. 国际化 (i18n) 语言支持系统 ---
+        const i18n = {
+            zh: {
+                pageTitle: "科技共享-智能多功能响应式导航",
+                langTitle: "语言 / Language",
+                themeTitle: "基础色彩模式 (本地偏好)",
+                themeLight: "日间", themeDark: "夜间",
+                bgTitle: "自定义背景 (本地生效)", bgInputPlace: "输入图片网址 https://...",
+                applyBtn: "应用", clearBg: "清除壁纸", logoutBtn: "退出后台管理",
+                weatherLoading: "正在定位测算天气...",
+                enGoogle: "谷歌 Google", enBing: "必应 Bing", enBaidu: "百度 Baidu",
+                searchGoogle: "在 Google 中搜索...", searchBing: "在 必应 Bing 中搜索...", searchBaidu: "在 百度 Baidu 中搜索...", searchGithub: "在 GitHub 中搜索仓库...",
+                cardRec: "常用推荐", cardDev: "效率与开发", cardCustom: "站长推荐", cardFriend: "友情链接",
+                linkBlog: "科技共享博客", linkBili: "哔哩哔哩", linkZhihu: "知乎", linkWeibo: "微博", linkJuejin: "稀土掘金",
+                addCloud: "添加 (云端)", addLocal: "添加 (本地)",
+                expandMore: "展开显示更多", collapseMore: "收起部分站点",
+                footerText: "&copy; 2026 科技共享-智能生态导航 · Powered by Cloudflare", adminBadge: "已登入",
+                modalAddCloud: "添加云端站长推荐", modalAddFriend: "添加友情链接",
+                siteName: "网站名称", siteNamePlace: "例如：百度", siteUrl: "网站网址 (URL)",
+                btnCancel: "取消", btnSave: "保存站点",
+                noCloudLinks: "暂无自定义链接", loadingCloud: "正在从云端加载...",
+                delConfirm: "确定要删除这个云端链接吗？", pwdPrompt: "🔐 请输入后台管理员安全密码：", pwdSuccess: "🎉 认证成功！管理功能已全部解锁。", pwdFail: "❌ 密码错误，鉴权失败！", logoutMsg: "🔒 已安全退出管理后台，页面回归只读状态。",
+                weatherCloudy: "多云", weatherClear: "晴朗", weatherRain: "阵雨", weatherSnow: "降雪", weatherThunder: "雷阵雨", weatherDefault: "风调雨顺 · 晴"
+            },
+            en: {
+                pageTitle: "TechShare - Smart Responsive Nav",
+                langTitle: "Language / 语言",
+                themeTitle: "Color Theme (Local Pref)",
+                themeLight: "Light", themeDark: "Dark",
+                bgTitle: "Custom Wallpaper (Local)", bgInputPlace: "Image URL https://...",
+                applyBtn: "Apply", clearBg: "Clear Wallpaper", logoutBtn: "Logout Admin",
+                weatherLoading: "Fetching weather...",
+                enGoogle: "Google", enBing: "Bing", enBaidu: "Baidu",
+                searchGoogle: "Search in Google...", searchBing: "Search in Bing...", searchBaidu: "Search in Baidu...", searchGithub: "Search in GitHub...",
+                cardRec: "Recommended", cardDev: "Dev & Tools", cardCustom: "Webmaster Picks", cardFriend: "Friend Links",
+                linkBlog: "TechShare Blog", linkBili: "Bilibili", linkZhihu: "Zhihu", linkWeibo: "Weibo", linkJuejin: "Juejin",
+                addCloud: "Add (Cloud)", addLocal: "Add (Local)",
+                expandMore: "Show More", collapseMore: "Collapse",
+                footerText: "&copy; 2026 TechShare Smart Nav · Powered by Cloudflare", adminBadge: "Logged In",
+                modalAddCloud: "Add Cloud Link", modalAddFriend: "Add Friend Link",
+                siteName: "Site Name", siteNamePlace: "e.g., Google", siteUrl: "Site URL",
+                btnCancel: "Cancel", btnSave: "Save Site",
+                noCloudLinks: "No custom links yet", loadingCloud: "Loading from cloud...",
+                delConfirm: "Are you sure you want to delete this cloud link?", pwdPrompt: "🔐 Enter Admin Password:", pwdSuccess: "🎉 Authenticated! Admin features unlocked.", pwdFail: "❌ Incorrect password!", logoutMsg: "🔒 Logged out safely. Read-only mode activated.",
+                weatherCloudy: "Cloudy", weatherClear: "Clear", weatherRain: "Rain", weatherSnow: "Snow", weatherThunder: "Thunder", weatherDefault: "Good Weather · Clear"
+            }
+        };
+
+        let currentLang = localStorage.getItem('nav_lang') || 'zh';
+
+        function t(key) {
+            return i18n[currentLang][key] || key;
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('nav_lang', lang);
+            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+            applyLanguage();
+            updateClockAndGreeting();
+            renderWeather(); 
+            selectEngine(currentEngineKey); // Update placeholder
+            document.getElementById('theme-panel').classList.add('hidden');
+        }
+
+        function applyLanguage() {
+            document.getElementById('page-title').innerText = t('pageTitle');
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.innerHTML = t(el.getAttribute('data-i18n'));
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+            });
+            loadCustomLinks(); // Re-render to update dynamic buttons
+        }
+
+        // --- 全局控制状态 ---
         let isCustomLinksExpanded = false;
         let currentModalTarget = 'custom'; 
+        let currentEngineKey = 'google';
 
-        // --- 0. 隐蔽式轻量级后台管理员鉴权模块 ---
+        // --- 1. 隐蔽式轻量级后台管理员鉴权模块 ---
         const ADMIN_PWD_HASH = "admin888"; 
 
         function checkAdminSession() {
@@ -250,33 +337,29 @@
 
         function triggerAdminLogin() {
             if (localStorage.getItem('nav_admin_auth') === 'true') {
-                alert("提示：您当前已处于后台管理模式，右上角调色盘已解锁专属壁纸修改权限。");
+                alert(currentLang === 'zh' ? "提示：您当前已处于后台管理模式，右上角调色盘已解锁专属壁纸修改权限。" : "Notice: You are already in admin mode. Wallpaper config is unlocked in the top-right palette.");
                 return;
             }
-            const pwd = prompt("🔐 请输入后台管理员安全密码：");
+            const pwd = prompt(t('pwdPrompt'));
             if (pwd === null) return;
             if (pwd === ADMIN_PWD_HASH) {
                 localStorage.setItem('nav_admin_auth', 'true');
-                alert("🎉 认证成功！管理功能已全部解锁。");
+                alert(t('pwdSuccess'));
                 checkAdminSession();
-                loadCustomLinks();
-                loadFriendLinks();
             } else {
-                alert("❌ 密码错误，鉴权失败！");
+                alert(t('pwdFail'));
             }
         }
 
         function logoutAdmin() {
             localStorage.removeItem('nav_admin_auth');
-            alert("🔒 已安全退出管理后台，页面回归只读状态。");
+            alert(t('logoutMsg'));
             isCustomLinksExpanded = false; 
             checkAdminSession();
-            loadCustomLinks();
-            loadFriendLinks();
             document.getElementById('theme-panel').classList.add('hidden');
         }
 
-        // --- 1. 跨会话本地持久化主题与自定义专属壁纸 (保留本地缓存，按设备生效) ---
+        // --- 2. 主题与壁纸控制 ---
         function initTheme() {
             const savedTheme = localStorage.getItem('nav_theme_mode') || 'theme-dark';
             document.body.classList.remove('theme-light', 'theme-dark');
@@ -304,8 +387,7 @@
 
         function applyCustomBg() {
             const url = document.getElementById('custom-bg-input').value.trim();
-            if (!url) return alert('提示：请输入有效的背景图片 URL 网址！');
-
+            if (!url) return alert(currentLang === 'zh' ? '提示：请输入有效的网址！' : 'Please enter a valid URL!');
             applyWallpaperStyles(url);
             localStorage.setItem('nav_custom_wallpaper', url);
             document.getElementById('clear-bg-btn').classList.remove('hidden');
@@ -330,7 +412,7 @@
             document.getElementById('theme-panel').classList.add('hidden');
         }
 
-        // --- 2. 智能华夏万年历节日与节气精准问候系统 ---
+        // --- 3. 智能问候语系统 ---
         const sTermNames = ["小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪", "冬至"];
         const sTermInfo = [0, 21208, 42467, 63836, 85337, 107014, 128867, 150921, 173149, 195551, 218072, 240693, 263343, 285989, 308563, 331033, 353350, 375494, 397447, 419210, 440795, 462224, 483532, 504758];
 
@@ -345,115 +427,136 @@
 
         function getFestival(m, d) {
             const md = `${String(m+1).padStart(2, '0')}${String(d).padStart(2, '0')}`;
-            const staticFests = {
-                "0101": "元旦快乐", "0308": "妇女节快乐", "0501": "五一劳动节",
-                "0601": "儿童节快乐", "1001": "国庆节快乐", "1225": "圣诞节"
-            };
-            return staticFests[md] || null;
+            const fests = { "0101": "元旦快乐", "0308": "妇女节快乐", "0501": "五一劳动节", "0601": "儿童节快乐", "1001": "国庆节快乐", "1225": "圣诞节" };
+            return fests[md] || null;
         }
 
         function updateClockAndGreeting() {
             const now = new Date();
             const y = now.getFullYear(), m = now.getMonth(), d = now.getDate(), h = now.getHours();
-            
-            document.getElementById('clock').innerText = 
-                `${String(h).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            document.getElementById('clock').innerText = `${String(h).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
             let greetStr = "";
-            const term = getSolarTerm(y, m, d);
-            const fest = getFestival(m, d);
-
-            if (fest) greetStr = `🎉 今天是 ${fest}，祝你开心！`;
-            else if (term) greetStr = `🍃 今日节气 · 【${term}】，顺应四时，平安喜乐。`;
-            else {
-                if (h >= 0 && h < 5) greetStr = "🌙 夜深了，静谧的星空在守护你，早点休息哦";
-                else if (h >= 5 && h < 8) greetStr = "🌅 清晨的朝阳刚刚升起，新的一天充满希望";
-                else if (h >= 8 && h < 11.5) greetStr = "☀️ 早上好，专注当下，今天也要元气满满";
-                else if (h >= 11.5 && h < 13.5) greetStr = "🍲 中午好，记得按时吃饭，歇息一下双眼";
-                else if (h >= 13.5 && h < 17.5) greetStr = "☕ 下午好，来杯清茶或咖啡，继续保持高效";
-                else if (h >= 17.5 && h < 19.5) greetStr = "🌇 傍晚好，落日余晖很美，放下疲惫准备享受夜晚吧";
-                else greetStr = "✨ 晚上好，属于自己的惬意时光，好好犒劳一下自己";
+            if (currentLang === 'zh') {
+                const term = getSolarTerm(y, m, d);
+                const fest = getFestival(m, d);
+                if (fest) greetStr = `🎉 今天是 ${fest}，祝你开心！`;
+                else if (term) greetStr = `🍃 今日节气 · 【${term}】，顺应四时，平安喜乐。`;
+                else {
+                    if (h >= 0 && h < 5) greetStr = "🌙 夜深了，静谧的星空在守护你，早点休息哦";
+                    else if (h >= 5 && h < 8) greetStr = "🌅 清晨的朝阳刚刚升起，新的一天充满希望";
+                    else if (h >= 8 && h < 11.5) greetStr = "☀️ 早上好，专注当下，今天也要元气满满";
+                    else if (h >= 11.5 && h < 13.5) greetStr = "🍲 中午好，记得按时吃饭，歇息一下双眼";
+                    else if (h >= 13.5 && h < 17.5) greetStr = "☕ 下午好，来杯清茶或咖啡，继续保持高效";
+                    else if (h >= 17.5 && h < 19.5) greetStr = "🌇 傍晚好，落日余晖很美，放下疲惫准备享受夜晚吧";
+                    else greetStr = "✨ 晚上好，属于自己的惬意时光，好好犒劳一下自己";
+                }
+            } else {
+                if (h >= 0 && h < 5) greetStr = "🌙 Late night, the stars are watching over you. Sleep early.";
+                else if (h >= 5 && h < 8) greetStr = "🌅 The morning sun is rising, a new day full of hope.";
+                else if (h >= 8 && h < 11.5) greetStr = "☀️ Good morning! Stay focused and full of energy.";
+                else if (h >= 11.5 && h < 13.5) greetStr = "🍲 Good noon! Remember to eat on time and rest your eyes.";
+                else if (h >= 13.5 && h < 17.5) greetStr = "☕ Good afternoon! Grab a tea or coffee and keep it up.";
+                else if (h >= 17.5 && h < 19.5) greetStr = "🌇 Good evening! The sunset is beautiful. Relax and enjoy.";
+                else greetStr = "✨ Good night! Enjoy your cozy time and treat yourself well.";
             }
             document.getElementById('greeting').innerText = greetStr;
         }
         setInterval(updateClockAndGreeting, 1000);
-        updateClockAndGreeting();
 
-        // --- 3. 智能定位天气组件 ---
+        // --- 4. 优化后的多语言智能天气定位 ---
+        let weatherState = { city: "Earth", temp: 26, code: 0, fetched: false };
+
         async function fetchWeather() {
-            const el = document.getElementById('weather-info');
             try {
                 const ipRes = await fetch('https://ipapi.co/json/');
                 if(!ipRes.ok) throw new Error();
                 const ipData = await ipRes.json();
                 
-                const cityTranslation = {
-                    "Santa Clara": "圣克拉拉", "San Jose": "圣何塞", "Beijing": "北京",
-                    "Shanghai": "上海", "Shenzhen": "深圳", "Guangzhou": "广州",
-                    "Hangzhou": "杭州", "Chengdu": "成都", "Hong Kong": "香港"
-                };
-                
-                let rawCity = ipData.city || "华夏";
-                let chineseCity = cityTranslation[rawCity] || rawCity; 
-                chineseCity = chineseCity.replace(/Province|City/gi, "").trim();
-
-                const { latitude, longitude } = ipData;
+                const { latitude, longitude, city } = ipData;
                 if(!latitude || !longitude) throw new Error();
 
                 const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
                 const weatherData = await weatherRes.json();
                 
-                const temp = Math.round(weatherData.current_weather.temperature);
-                const code = weatherData.current_weather.weathercode;
-                
-                let icon = 'fa-cloud'; let desc = '多云';
-                if (code === 0) { icon = 'fa-sun text-amber-500'; desc = '晴朗'; }
-                else if ([1, 2, 3].includes(code)) { icon = 'fa-cloud-sun text-indigo-300'; desc = '多云'; }
-                else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) { icon = 'fa-cloud-showers-heavy text-sky-400'; desc = '阵雨'; }
-                else if ([71, 73, 75, 77, 85, 86].includes(code)) { icon = 'fa-snowflake text-blue-200'; desc = '降雪'; }
-                else if ([95, 96, 99].includes(code)) { icon = 'fa-bolt text-yellow-500'; desc = '雷阵雨'; }
-
-                el.innerHTML = `<i class="fas ${icon}"></i> <span>${chineseCity} · ${desc} ${temp}°C</span>`;
+                weatherState = {
+                    city: city || "Earth",
+                    temp: Math.round(weatherData.current_weather.temperature),
+                    code: weatherData.current_weather.weathercode,
+                    fetched: true
+                };
             } catch (e) {
-                el.innerHTML = `<i class="fas fa-cloud text-slate-400"></i> <span>风调雨顺 · 晴 26°C</span>`;
+                weatherState.fetched = false;
             }
+            renderWeather();
         }
-        fetchWeather();
 
-        // --- 4. 搜索引擎选择机制 ---
+        function renderWeather() {
+            const el = document.getElementById('weather-info');
+            if (!weatherState.fetched) {
+                el.innerHTML = `<i class="fas fa-cloud text-slate-400"></i> <span>${t('weatherDefault')}</span>`;
+                return;
+            }
+
+            // 处理城市名称国际化映射
+            let displayCity = weatherState.city;
+            if (currentLang === 'zh') {
+                const cityMap = {
+                    "Singapore": "新加坡", "Santa Clara": "圣克拉拉", "San Jose": "圣何塞", 
+                    "Beijing": "北京", "Shanghai": "上海", "Shenzhen": "深圳", 
+                    "Guangzhou": "广州", "Hangzhou": "杭州", "Chengdu": "成都", "Hong Kong": "香港"
+                };
+                displayCity = cityMap[displayCity] || displayCity;
+                displayCity = displayCity.replace(/Province|City/gi, "").trim();
+            }
+
+            // 处理天气图标及描述
+            const code = weatherState.code;
+            let icon = 'fa-cloud'; let descKey = 'weatherCloudy';
+            if (code === 0) { icon = 'fa-sun text-amber-500'; descKey = 'weatherClear'; }
+            else if ([1, 2, 3].includes(code)) { icon = 'fa-cloud-sun text-indigo-300'; descKey = 'weatherCloudy'; }
+            else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) { icon = 'fa-cloud-showers-heavy text-sky-400'; descKey = 'weatherRain'; }
+            else if ([71, 73, 75, 77, 85, 86].includes(code)) { icon = 'fa-snowflake text-blue-200'; descKey = 'weatherSnow'; }
+            else if ([95, 96, 99].includes(code)) { icon = 'fa-bolt text-yellow-500'; descKey = 'weatherThunder'; }
+
+            el.innerHTML = `<i class="fas ${icon}"></i> <span>${displayCity} · ${t(descKey)} ${weatherState.temp}°C</span>`;
+        }
+
+        // --- 5. 搜索引擎选择 ---
         const engines = {
-            google: { action: 'https://www.google.com/search', name: 'q', placeholder: '在 Google 中搜索...', icon: 'fab fa-google text-blue-400' },
-            bing: { action: 'https://cn.bing.com/search', name: 'q', placeholder: '在 必应 Bing 中搜索...', icon: 'fab fa-microsoft text-teal-400' },
-            baidu: { action: 'https://www.baidu.com/s', name: 'wd', placeholder: '在 百度 Baidu 中搜索...', icon: 'fas fa-paw text-red-400' },
-            github: { action: 'https://github.com/search', name: 'q', placeholder: '在 GitHub 中搜索仓库...', icon: 'fab fa-github text-slate-400' }
+            google: { action: 'https://www.google.com/search', name: 'q', placeholderKey: 'searchGoogle', icon: 'fab fa-google text-blue-400' },
+            bing: { action: 'https://cn.bing.com/search', name: 'q', placeholderKey: 'searchBing', icon: 'fab fa-microsoft text-teal-400' },
+            baidu: { action: 'https://www.baidu.com/s', name: 'wd', placeholderKey: 'searchBaidu', icon: 'fas fa-paw text-red-400' },
+            github: { action: 'https://github.com/search', name: 'q', placeholderKey: 'searchGithub', icon: 'fab fa-github text-slate-400' }
         };
 
-        function toggleEngineMenu(e) {
-            e.stopPropagation();
-            document.getElementById('engine-menu').classList.toggle('hidden');
-        }
+        function toggleEngineMenu(e) { e.stopPropagation(); document.getElementById('engine-menu').classList.toggle('hidden'); }
 
         function selectEngine(key) {
+            currentEngineKey = key;
             const form = document.getElementById('search-form');
             const input = document.getElementById('search-input');
             const icon = document.getElementById('engine-icon');
             
             form.action = engines[key].action;
             input.name = engines[key].name;
-            input.placeholder = engines[key].placeholder;
-            icon.className = engines[key].icon;
             
+            // i18n applied to placeholder
+            input.setAttribute('data-i18n-placeholder', engines[key].placeholderKey);
+            input.placeholder = t(engines[key].placeholderKey);
+            
+            icon.className = engines[key].icon;
             document.getElementById('engine-menu').classList.add('hidden');
         }
 
-        // --- 5. 链接弹窗控制统筹 ---
+        // --- 6. 链接管理 (云端与本地) ---
         function openLinkModal(target) {
             currentModalTarget = target;
-            const modalTitle = document.getElementById('modal-title');
+            const textEl = document.getElementById('modal-title-text');
             if(target === 'friend') {
-                modalTitle.innerHTML = `<i class="fas fa-handshake mr-2 text-emerald-400"></i>添加友情链接`;
+                textEl.innerText = t('modalAddFriend');
             } else {
-                modalTitle.innerHTML = `<i class="fas fa-link mr-2 text-pink-400"></i>添加云端站长推荐`;
+                textEl.innerText = t('modalAddCloud');
             }
             toggleModal(true);
         }
@@ -464,203 +567,118 @@
                 document.getElementById('site-name').value = '';
                 document.getElementById('site-url').value = '';
                 modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
-            }
+            } else { modal.classList.add('hidden'); }
         }
 
-        function closeModalOnBlank(e) {
-            if(e.target.id === 'modal') toggleModal(false);
-        }
+        function closeModalOnBlank(e) { if(e.target.id === 'modal') toggleModal(false); }
 
         async function saveActiveLink() {
             const name = document.getElementById('site-name').value.trim();
             let url = document.getElementById('site-url').value.trim();
-            
-            if(!name || !url) {
-                alert('提示：请完整填写网站名称和网址！');
-                return;
-            }
-            if(!/^https?:\/\//i.test(url)) {
-                url = 'https://' + url;
-            }
+            if(!name || !url) return alert(currentLang === 'zh' ? '请完整填写名称和网址！' : 'Please fill in both name and URL!');
+            if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
             if(currentModalTarget === 'friend') {
-                // 友情链接：依然保存在本地缓存
                 const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
                 links.push({ name, url });
                 localStorage.setItem('nav_friend_links', JSON.stringify(links));
                 loadFriendLinks();
             } else {
-                // 站长推荐：同步至云端数据库
                 try {
-                    // 1. 获取最新云端数据
                     const res = await fetch('/api/links');
-                    let links = [];
-                    if(res.ok) {
-                        links = await res.json();
-                    } else {
-                        // 如果接口异常，回退使用本地数组结构
-                        links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
-                    }
-                    
-                    // 2. 添加新链接
+                    let links = res.ok ? await res.json() : JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
                     links.push({ name, url });
-                    
-                    // 3. 提交给云端后端
-                    await fetch('/api/links', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(links)
-                    });
-                    
-                    // 容灾处理：同步备份到本地，以防云端宕机
-                    localStorage.setItem('nav_custom_links', JSON.stringify(links));
-                    
+                    await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(links) });
+                    localStorage.setItem('nav_custom_links', JSON.stringify(links)); // Backup
                     loadCustomLinks();
                 } catch (error) {
-                    console.error(error);
-                    alert("云端保存失败，请检查是否已在 Cloudflare 配置 KV 数据库！\n（当前已自动降级保存至本地缓存）");
-                    // 降级处理
                     const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
                     links.push({ name, url });
                     localStorage.setItem('nav_custom_links', JSON.stringify(links));
                     loadCustomLinks();
                 }
             }
-            
             toggleModal(false);
         }
 
-        // --- 6. 自定义快捷链接动态折叠与接入后端云 API ---
         async function loadCustomLinks() {
             const container = document.getElementById('custom-links-container');
             const actionWrapper = document.getElementById('expand-action-wrapper');
             const mainGrid = document.getElementById('main-nav-grid');
             const customCard = document.getElementById('card-custom');
             
-            container.innerHTML = '<div class="col-span-full text-center text-xs text-slate-400/60 py-10"><i class="fas fa-spinner fa-spin"></i> 正在从云端加载...</div>';
+            container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10"><i class="fas fa-spinner fa-spin"></i> ${t('loadingCloud')}</div>`;
             
             let links = [];
             try {
-                // 核心改动：从云端 API 拉取数据
                 const res = await fetch('/api/links');
-                if(res.ok) {
-                    links = await res.json();
-                } else {
-                    throw new Error("云端接口未配置");
-                }
+                if(res.ok) links = await res.json();
+                else throw new Error();
             } catch(e) {
-                console.warn("未连接到云端数据库，已降级读取本地缓存");
                 links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
             }
             
             container.innerHTML = '';
-            
             if(links.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10">暂无自定义链接</div>`;
+                container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10">${t('noCloudLinks')}</div>`;
                 actionWrapper.classList.add('hidden');
                 resetCustomLayout(mainGrid, customCard, container);
                 return;
             }
 
-            // 三列拉伸切换
             if (links.length > 6 && isCustomLinksExpanded) {
-                mainGrid.classList.remove('xl:grid-cols-3');
-                mainGrid.classList.add('xl:grid-cols-4');
-                customCard.classList.remove('xl:col-span-1');
-                customCard.classList.add('xl:col-span-2');
-                container.classList.remove('grid-cols-2');
-                container.classList.add('grid-cols-2', 'sm:grid-cols-3');
+                mainGrid.classList.remove('xl:grid-cols-3'); mainGrid.classList.add('xl:grid-cols-4');
+                customCard.classList.remove('xl:col-span-1'); customCard.classList.add('xl:col-span-2');
+                container.classList.remove('grid-cols-2'); container.classList.add('grid-cols-2', 'sm:grid-cols-3');
             } else {
                 resetCustomLayout(mainGrid, customCard, container);
             }
 
-            const shouldSlice = links.length > 6 && !isCustomLinksExpanded;
-            const visibleLinks = shouldSlice ? links.slice(0, 6) : links;
+            const visibleLinks = (links.length > 6 && !isCustomLinksExpanded) ? links.slice(0, 6) : links;
 
             visibleLinks.forEach((item, index) => {
                 let displayIcon = `<div class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold shrink-0">${item.name.charAt(0).toUpperCase()}</div>`;
                 try {
-                    if(item.url) {
-                        const domain = new URL(item.url).hostname;
-                        displayIcon = `<img src="https://unavatar.io/duckduckgo/${domain}" onerror="this.style.display='none'" class="w-5 h-5 rounded object-contain shrink-0" alt="icon" />`;
-                    }
+                    if(item.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(item.url).hostname}" onerror="this.style.display='none'" class="w-5 h-5 rounded object-contain shrink-0" alt="icon" />`;
                 } catch(err){}
-
                 container.innerHTML += `
                     <div class="group relative flex items-center justify-between p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all">
                         <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2.5 truncate w-full pr-5">
-                            ${displayIcon}
-                            <span class="text-sm font-medium truncate">${item.name}</span>
+                            ${displayIcon} <span class="text-sm font-medium truncate">${item.name}</span>
                         </a>
-                        <button type="button" aria-label="删除链接" onclick="deleteCustomLink(event, ${index})" class="admin-only absolute right-2 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-slate-500/20 p-1 rounded cursor-pointer">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                `;
+                        <button type="button" onclick="deleteCustomLink(event, ${index})" class="admin-only absolute right-2 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-slate-500/20 p-1 rounded cursor-pointer"><i class="fas fa-trash-alt"></i></button>
+                    </div>`;
             });
 
             if (links.length > 6) {
                 actionWrapper.classList.remove('hidden');
                 const btn = document.getElementById('expand-btn');
-                if (isCustomLinksExpanded) {
-                    btn.innerHTML = `<span>收起部分站点</span> <i class="fas fa-chevron-up text-[10px]"></i>`;
-                } else {
-                    btn.innerHTML = `<span>展开显示更多 (${links.length - 6}个)</span> <i class="fas fa-chevron-down text-[10px]"></i>`;
-                }
-            } else {
-                actionWrapper.classList.add('hidden');
-            }
+                btn.innerHTML = isCustomLinksExpanded 
+                    ? `<span data-i18n="collapseMore">${t('collapseMore')}</span> <i class="fas fa-chevron-up text-[10px]"></i>` 
+                    : `<span data-i18n="expandMore">${t('expandMore')}</span> (${links.length - 6}) <i class="fas fa-chevron-down text-[10px]"></i>`;
+            } else { actionWrapper.classList.add('hidden'); }
         }
 
         function resetCustomLayout(mainGrid, customCard, container) {
-            mainGrid.classList.remove('xl:grid-cols-4');
-            mainGrid.classList.add('xl:grid-cols-3');
-            customCard.classList.remove('xl:col-span-2');
-            customCard.classList.add('xl:col-span-1');
-            container.classList.remove('sm:grid-cols-3');
-            container.classList.add('grid-cols-2');
+            mainGrid.classList.remove('xl:grid-cols-4'); mainGrid.classList.add('xl:grid-cols-3');
+            customCard.classList.remove('xl:col-span-2'); customCard.classList.add('xl:col-span-1');
+            container.classList.remove('sm:grid-cols-3'); container.classList.add('grid-cols-2');
         }
 
-        function toggleExpandCustomLinks() {
-            isCustomLinksExpanded = !isCustomLinksExpanded;
-            loadCustomLinks();
-        }
+        function toggleExpandCustomLinks() { isCustomLinksExpanded = !isCustomLinksExpanded; loadCustomLinks(); }
 
         async function deleteCustomLink(e, index) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if(!confirm("确定要删除这个云端链接吗？")) return;
-
+            e.preventDefault(); e.stopPropagation();
+            if(!confirm(t('delConfirm'))) return;
             try {
-                // 1. 获取现有数组
                 const res = await fetch('/api/links');
-                let links = [];
-                if(res.ok) {
-                    links = await res.json();
-                } else {
-                    links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
-                }
-                
-                // 2. 删除元素
+                let links = res.ok ? await res.json() : JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
                 links.splice(index, 1);
-                
-                // 3. 同步回云端
-                await fetch('/api/links', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(links)
-                });
-                
+                await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(links) });
                 localStorage.setItem('nav_custom_links', JSON.stringify(links));
-                
                 if(links.length <= 6) isCustomLinksExpanded = false;
                 loadCustomLinks();
             } catch(error) {
-                console.error(error);
-                // 降级删除本地缓存
                 const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
                 links.splice(index, 1);
                 localStorage.setItem('nav_custom_links', JSON.stringify(links));
@@ -669,54 +687,46 @@
             }
         }
 
-        // --- 7. 友情链接加载与管理模块 (依然使用本地缓存机制) ---
         function loadFriendLinks() {
             const container = document.getElementById('friend-links-container');
             const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
             container.innerHTML = '';
-            
             if(links.length === 0) {
-                const defaultFriends = [
+                localStorage.setItem('nav_friend_links', JSON.stringify([
                     { name: "IT头条博客", url: "https://it-toutiao.blogspot.com" },
                     { name: "科技共享导航", url: "https://kjgx.168668520.xyz" }
-                ];
-                localStorage.setItem('nav_friend_links', JSON.stringify(defaultFriends));
+                ]));
                 return loadFriendLinks();
             }
-
             links.forEach((item, index) => {
                 container.innerHTML += `
                     <div class="group relative flex items-center justify-between p-2.5 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-emerald-600/10 transition-all text-center">
-                        <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="w-full text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors truncate px-2">
-                            ${item.name}
-                        </a>
-                        <button type="button" aria-label="删除友链" onclick="deleteFriendLink(event, ${index})" class="admin-only absolute right-1 text-[10px] text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-500/10 px-1 rounded cursor-pointer">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
+                        <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="w-full text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors truncate px-2">${item.name}</a>
+                        <button type="button" onclick="deleteFriendLink(event, ${index})" class="admin-only absolute right-1 text-[10px] text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-500/10 px-1 rounded cursor-pointer"><i class="fas fa-times"></i></button>
+                    </div>`;
             });
         }
 
         function deleteFriendLink(e, index) {
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); e.stopPropagation();
             const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
             links.splice(index, 1);
             localStorage.setItem('nav_friend_links', JSON.stringify(links));
             loadFriendLinks();
         }
 
-        // 全局空白点击自动收起下拉窗与控制面板
+        // --- 全局初始化 ---
         document.addEventListener('click', () => {
             document.getElementById('engine-menu').classList.add('hidden');
             document.getElementById('theme-panel').classList.add('hidden');
         });
 
-        // 页面总初始化入口
         checkAdminSession();
         initTheme();
-        loadCustomLinks();
+        document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+        applyLanguage();
+        updateClockAndGreeting();
+        fetchWeather();
         loadFriendLinks();
     </script>
 </body>
