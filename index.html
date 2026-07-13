@@ -301,7 +301,7 @@
             applyLanguage();
             updateClockAndGreeting();
             renderWeather(); 
-            selectEngine(currentEngineKey); // Update placeholder
+            selectEngine(currentEngineKey); 
             document.getElementById('theme-panel').classList.add('hidden');
         }
 
@@ -313,7 +313,8 @@
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                 el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
             });
-            loadCustomLinks(); // Re-render to update dynamic buttons
+            loadCustomLinks(); 
+            loadFriendLinks(); // 重新加载友链以应用语言切换
         }
 
         // --- 全局控制状态 ---
@@ -359,13 +360,23 @@
             document.getElementById('theme-panel').classList.add('hidden');
         }
 
-        // --- 2. 主题与壁纸控制 ---
+        // --- 2. 主题与壁纸控制 (强制默认全局壁纸) ---
         function initTheme() {
             const savedTheme = localStorage.getItem('nav_theme_mode') || 'theme-dark';
             document.body.classList.remove('theme-light', 'theme-dark');
             document.body.classList.add(savedTheme);
 
-            const savedBg = localStorage.getItem('nav_custom_wallpaper');
+            // 【重点优化】：硬编码一张默认壁纸。如果本地没有设置，就强制使用这张。
+            const globalDefaultBg = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"; 
+            
+            // 先尝试获取用户自己设置的，如果没有，就用上面默认的
+            let savedBg = localStorage.getItem('nav_custom_wallpaper');
+            
+            if (!savedBg && !document.body.classList.contains('bg-cleared')) {
+                // 如果没有手动清除过，就展示默认壁纸
+                savedBg = globalDefaultBg;
+            }
+
             if (savedBg) {
                 applyWallpaperStyles(savedBg);
                 document.getElementById('custom-bg-input').value = savedBg;
@@ -390,6 +401,7 @@
             if (!url) return alert(currentLang === 'zh' ? '提示：请输入有效的网址！' : 'Please enter a valid URL!');
             applyWallpaperStyles(url);
             localStorage.setItem('nav_custom_wallpaper', url);
+            document.body.classList.remove('bg-cleared'); // 移除清除标记
             document.getElementById('clear-bg-btn').classList.remove('hidden');
             document.getElementById('theme-panel').classList.add('hidden');
         }
@@ -407,6 +419,7 @@
             document.body.style.backgroundImage = '';
             document.body.classList.remove('has-custom-bg');
             localStorage.removeItem('nav_custom_wallpaper');
+            document.body.classList.add('bg-cleared'); // 标记为已清除，防止默认壁纸再次加载
             document.getElementById('custom-bg-input').value = '';
             document.getElementById('clear-bg-btn').classList.add('hidden');
             document.getElementById('theme-panel').classList.add('hidden');
@@ -498,7 +511,6 @@
                 return;
             }
 
-            // 处理城市名称国际化映射
             let displayCity = weatherState.city;
             if (currentLang === 'zh') {
                 const cityMap = {
@@ -510,7 +522,6 @@
                 displayCity = displayCity.replace(/Province|City/gi, "").trim();
             }
 
-            // 处理天气图标及描述
             const code = weatherState.code;
             let icon = 'fa-cloud'; let descKey = 'weatherCloudy';
             if (code === 0) { icon = 'fa-sun text-amber-500'; descKey = 'weatherClear'; }
@@ -541,7 +552,6 @@
             form.action = engines[key].action;
             input.name = engines[key].name;
             
-            // i18n applied to placeholder
             input.setAttribute('data-i18n-placeholder', engines[key].placeholderKey);
             input.placeholder = t(engines[key].placeholderKey);
             
@@ -579,7 +589,8 @@
             if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
             if(currentModalTarget === 'friend') {
-                const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
+                // 不再硬写入 localStorage 强制中文，直接往真实数组追加
+                let links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
                 links.push({ name, url });
                 localStorage.setItem('nav_friend_links', JSON.stringify(links));
                 loadFriendLinks();
@@ -589,7 +600,7 @@
                     let links = res.ok ? await res.json() : JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
                     links.push({ name, url });
                     await fetch('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(links) });
-                    localStorage.setItem('nav_custom_links', JSON.stringify(links)); // Backup
+                    localStorage.setItem('nav_custom_links', JSON.stringify(links)); 
                     loadCustomLinks();
                 } catch (error) {
                     const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
@@ -687,17 +698,35 @@
             }
         }
 
+        // --- 7. 友情链接加载模块 (优化：默认状态智能双语) ---
         function loadFriendLinks() {
             const container = document.getElementById('friend-links-container');
-            const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
+            const linksStr = localStorage.getItem('nav_friend_links');
+            let links = linksStr ? JSON.parse(linksStr) : [];
+            
             container.innerHTML = '';
+            
+            // 【重点优化】：如果用户没有手动添加过任何数据，则采用智能双语默认数据渲染
             if(links.length === 0) {
-                localStorage.setItem('nav_friend_links', JSON.stringify([
+                const defaultFriends = currentLang === 'zh' ? [
                     { name: "IT头条博客", url: "https://it-toutiao.blogspot.com" },
                     { name: "科技共享导航", url: "https://kjgx.168668520.xyz" }
-                ]));
-                return loadFriendLinks();
+                ] : [
+                    { name: "IT Toutiao Blog", url: "https://it-toutiao.blogspot.com" },
+                    { name: "TechShare Nav", url: "https://kjgx.168668520.xyz" }
+                ];
+                
+                defaultFriends.forEach((item, index) => {
+                    container.innerHTML += `
+                        <div class="group relative flex items-center justify-between p-2.5 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-emerald-600/10 transition-all text-center">
+                            <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="w-full text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors truncate px-2">${item.name}</a>
+                            <button type="button" onclick="deleteFriendLink(event, ${index})" class="admin-only absolute right-1 text-[10px] text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-500/10 px-1 rounded cursor-pointer"><i class="fas fa-times"></i></button>
+                        </div>`;
+                });
+                return;
             }
+
+            // 如果有用户手动保存的数据，则直接渲染（此时不干预翻译，忠于用户输入）
             links.forEach((item, index) => {
                 container.innerHTML += `
                     <div class="group relative flex items-center justify-between p-2.5 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-emerald-600/10 transition-all text-center">
@@ -709,7 +738,21 @@
 
         function deleteFriendLink(e, index) {
             e.preventDefault(); e.stopPropagation();
-            const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
+            
+            let linksStr = localStorage.getItem('nav_friend_links');
+            let links = linksStr ? JSON.parse(linksStr) : [];
+            
+            // 防止删除的是虚拟默认数据
+            if(links.length === 0) {
+                 links = currentLang === 'zh' ? [
+                    { name: "IT头条博客", url: "https://it-toutiao.blogspot.com" },
+                    { name: "科技共享导航", url: "https://kjgx.168668520.xyz" }
+                ] : [
+                    { name: "IT Toutiao Blog", url: "https://it-toutiao.blogspot.com" },
+                    { name: "TechShare Nav", url: "https://kjgx.168668520.xyz" }
+                ];
+            }
+            
             links.splice(index, 1);
             localStorage.setItem('nav_friend_links', JSON.stringify(links));
             loadFriendLinks();
@@ -727,7 +770,6 @@
         applyLanguage();
         updateClockAndGreeting();
         fetchWeather();
-        loadFriendLinks();
     </script>
 </body>
 </html>
