@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEO 优化 -->
+    <meta name="description" content="科技共享-智能多功能响应式导航。提供高效的搜索、自定义网址管理、动态天气与专属壁纸等个性化功能。">
+    <meta name="keywords" content="网址导航, 科技共享, 开发者导航, 智能导航, 响应式网站">
+    
+    <title>科技共享-智能多功能响应式导航</title>
+    
+    <!-- 性能优化：DNS 预解析与预连接 -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    
+    <!-- Google AdSense 基础脚本 (请将 ca-pub-XXXXXXXXXXXXXXXX 替换为你的实际发布商 ID) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* 日间模式 (Light) 基础样式 */
+        body.theme-light {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #0f172a;
+        }
+        body.theme-light .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+        body.theme-light .glass-input {
+            background: rgba(0, 0, 0, 0.04);
+            color: #000;
+        }
+        body.theme-light input::placeholder { color: #94a3b8; }
+        body.theme-light #engine-menu { background: #ffffff; border-color: #e2e8f0; }
+        body.theme-light #engine-menu button { color: #334155; }
+        body.theme-light #engine-menu button:hover { background: rgba(79, 70, 229, 0.08); }
+
+        /* 夜间模式 (Dark) 基础样式 */
+        body.theme-dark {
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            color: #f8fafc;
+        }
+        body.theme-dark .glass-card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        body.theme-dark .glass-input {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        /* 自定义壁纸激活状态的遮罩 */
+        body.has-custom-bg::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(2px);
+            z-index: -1;
+        }
+
+        /* 全局过渡动画与网格平滑过渡支持 */
+        body, .glass-card, .glass-input, #custom-links-container {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 管理员权限控制类：默认非管理员隐藏编辑元素 */
+        body:not(.is-admin) .admin-only {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="theme-dark font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- 个性化设置浮窗 -->
+    <div class="fixed top-5 right-5 z-[150] relative">
+        <button aria-label="个性化设置" onclick="toggleThemeMenu(event)" class="w-10 h-10 rounded-xl glass-card flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:scale-105 active:scale-95 transition-all shadow-lg cursor-pointer" title="个性化设置">
+            <i id="theme-icon" class="fas fa-palette text-sm"></i>
+        </button>
+        <div id="theme-panel" class="absolute right-0 top-full mt-2 w-60 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl hidden backdrop-blur-md p-4 space-y-3 z-[160]" onclick="event.stopPropagation()">
+            <div class="text-xs font-bold text-slate-400 px-1">基础色彩模式</div>
+            <div class="flex gap-2">
+                <button onclick="setBaseTheme('theme-light')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-sun text-amber-500"></i> 日间</button>
+                <button onclick="setBaseTheme('theme-dark')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs text-center hover:bg-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1"><i class="fas fa-moon text-indigo-400"></i> 夜间</button>
+            </div>
+            
+            <div class="admin-only space-y-1.5 px-1 border-t border-slate-800 pt-3">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs text-slate-400 font-bold">自定义背景图片</label>
+                    <button onclick="clearCustomBg()" id="clear-bg-btn" class="text-[10px] text-red-400 hover:underline hidden">清除壁纸</button>
+                </div>
+                <div class="flex gap-1.5">
+                    <input type="text" id="custom-bg-input" placeholder="输入图片网址 https://..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                    <button onclick="applyCustomBg()" class="bg-indigo-600 text-white px-2 py-1 rounded-lg text-xs hover:bg-indigo-500 cursor-pointer shrink-0">应用</button>
+                </div>
+            </div>
+
+            <div class="admin-only border-t border-slate-800 pt-2">
+                <button onclick="logoutAdmin()" class="w-full py-1 rounded-lg bg-red-950/40 border border-red-900/40 text-red-400 text-[11px] text-center hover:bg-red-900/40 transition-colors cursor-pointer">退出后台管理</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 py-12 lg:py-20 flex flex-col items-center">
+        
+        <!-- 时间与问候语组件 -->
+        <div class="text-center mb-10 animate-fade-in">
+            <h1 id="clock" class="text-5xl lg:text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-2">00:00:00</h1>
+            <div class="flex items-center justify-center space-x-3 text-sm md:text-base font-medium tracking-wide opacity-90">
+                <span id="greeting" class="text-indigo-400">正在筹备问候语...</span>
+                <span class="opacity-30">|</span>
+                <span id="weather-info" class="flex items-center gap-1.5 text-emerald-400">
+                    <i class="fas fa-spinner fa-spin text-xs"></i> 正在定位测算天气...
+                </span>
+            </div>
+        </div>
+
+        <!-- 搜索引擎组件 -->
+        <div class="w-full max-w-2xl mb-16 relative z-[100]">
+            <form id="search-form" action="https://www.google.com/search" method="get" target="_blank" rel="noopener noreferrer" class="relative">
+                <div class="flex items-center glass-input rounded-2xl border border-slate-700/40 shadow-2xl focus-within:border-indigo-500/80 transition-all duration-300">
+                    
+                    <div class="relative pl-4">
+                        <button type="button" aria-label="切换搜索引擎" id="engine-btn" onclick="toggleEngineMenu(event)" class="flex items-center space-x-2 text-slate-400 hover:text-indigo-400 transition-colors py-4 pr-2 cursor-pointer">
+                            <i id="engine-icon" class="fab fa-google text-blue-400"></i>
+                            <i class="fas fa-chevron-down text-xs opacity-50"></i>
+                        </button>
+                        <div id="engine-menu" class="absolute left-2 top-full mt-2 w-36 bg-slate-950/95 border border-slate-800 rounded-xl shadow-2xl hidden backdrop-blur-md overflow-hidden z-[110]">
+                            <button type="button" onclick="selectEngine('google')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fab fa-google text-blue-400"></i> <span>谷歌 Google</span></button>
+                            <button type="button" onclick="selectEngine('bing')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fab fa-microsoft text-teal-400"></i> <span>必应 Bing</span></button>
+                            <button type="button" onclick="selectEngine('baidu')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fas fa-paw text-red-400"></i> <span>百度 Baidu</span></button>
+                            <button type="button" onclick="selectEngine('github')" class="w-full text-left px-4 py-2.5 hover:bg-indigo-600/20 text-sm flex items-center space-x-2 cursor-pointer"><i class="fab fa-github text-slate-400"></i> <span>GitHub</span></button>
+                        </div>
+                    </div>
+
+                    <input type="text" id="search-input" name="q" placeholder="在 Google 中搜索..." autocomplete="off" class="w-full bg-transparent border-none py-4 px-3 focus:outline-none focus:ring-0 text-base">
+                    <button type="submit" aria-label="搜索" class="mr-3 p-2.5 text-slate-400 hover:text-indigo-400 transition-colors">
+                        <i class="fas fa-search text-lg"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 导航卡片网格 -->
+        <div id="main-nav-grid" class="w-full grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8 relative z-10 items-start">
+            
+            <div id="card-recommend" class="glass-card rounded-2xl p-6 shadow-xl hover:border-indigo-500/30 transition-all duration-300">
+                <h3 class="text-lg font-semibold text-indigo-400 mb-4 flex items-center"><i class="fas fa-star mr-2.5"></i> 常用推荐</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-github text-xl text-slate-400"></i> <span class="text-sm font-medium">GitHub</span></a>
+                    <a href="https://www.youtube.com/@kejigongxiang" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-youtube text-xl text-red-500"></i> <span class="text-sm font-medium">YouTube</span></a>
+                    <a href="https://kjgx668.blogspot.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fas fa-globe text-xl text-blue-400"></i> <span class="text-sm font-medium">科技共享博客</span></a>
+                    <a href="https://x.com/kejigongxiang" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fas fa-tv text-xl text-pink-400"></i> <span class="text-sm font-medium">哔哩哔哩</span></a>
+                    <a href="https://www.zhihu.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-zhihu text-xl text-blue-500"></i> <span class="text-sm font-medium">知乎</span></a>
+                    <a href="https://weibo.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-indigo-600/20 transition-all"><i class="fab fa-weibo text-xl text-red-400"></i> <span class="text-sm font-medium">微博</span></a>
+                </div>
+            </div>
+
+            <div id="card-develop" class="glass-card rounded-2xl p-6 shadow-xl hover:border-purple-500/30 transition-all duration-300">
+                <h3 class="text-lg font-semibold text-purple-400 mb-4 flex items-center"><i class="fas fa-code mr-2.5"></i> 效率与开发</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="https://dash.cloudflare.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-cloud text-xl text-orange-400"></i> <span class="text-sm font-medium">Cloudflare</span></a>
+                    <a href="https://chatgpt.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-robot text-xl text-emerald-400"></i> <span class="text-sm font-medium">ChatGPT</span></a>
+                    <a href="https://juejin.cn" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-book text-xl text-blue-500"></i> <span class="text-sm font-medium">稀土掘金</span></a>
+                    <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-triangle-exclamation text-xl"></i> <span class="text-sm font-medium">Vercel</span></a>
+                    <a href="https://stackoverflow.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fab fa-stack-overflow text-xl text-orange-500"></i> <span class="text-sm font-medium">StackOverflow</span></a>
+                    <a href="https://caniuse.com" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-3 p-3 bg-slate-500/5 rounded-xl hover:bg-purple-600/20 transition-all"><i class="fas fa-browser text-xl text-sky-400"></i> <span class="text-sm font-medium">CanIUse</span></a>
+                </div>
+            </div>
+
+            <div id="card-custom" class="glass-card rounded-2xl p-6 shadow-xl hover:border-pink-500/30 transition-all duration-300 xl:col-span-1">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-pink-400 flex items-center"><i class="fas fa-folder-plus mr-2.5"></i> 站长推荐</h3>
+                    <button type="button" onclick="openLinkModal('custom')" class="admin-only text-xs px-2.5 py-1 bg-pink-600/20 text-pink-400 border border-pink-500/20 rounded-lg hover:bg-pink-600/40 transition-colors cursor-pointer z-[50]">添加</button>
+                </div>
+                <div id="custom-links-container" class="grid grid-cols-2 gap-3">
+                </div>
+                <div id="expand-action-wrapper" class="mt-4 pt-2 border-t border-slate-500/10 text-center hidden">
+                    <button onclick="toggleExpandCustomLinks()" id="expand-btn" class="text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer inline-flex items-center gap-1">
+                        <span>展开显示更多</span> <i class="fas fa-chevron-down text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="w-full relative z-10 mb-12">
+            <div class="glass-card rounded-2xl p-6 shadow-xl hover:border-emerald-500/20 transition-all duration-300">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-base font-semibold text-emerald-400 flex items-center"><i class="fas fa-handshake mr-2.5"></i> 友情链接</h3>
+                    <button type="button" onclick="openLinkModal('friend')" class="admin-only text-xs px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-600/40 transition-colors cursor-pointer z-[50]">申请互换</button>
+                </div>
+                <div id="friend-links-container" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                </div>
+            </div>
+        </div>
+
+        <footer id="admin-trigger" ondblclick="triggerAdminLogin()" class="text-slate-500 text-xs mt-4 cursor-pointer select-none tracking-wide hover:text-indigo-400/70 transition-colors" title="管理后台入口（双击进入）">
+            &copy; 2026 科技共享-智能生态导航 · Powered by Cloudflare Drop <span id="admin-badge" class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold hidden">已登入</span>
+        </footer>
+    </div>
+
+    <!-- 弹窗模态框 -->
+    <div id="modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[300]" onclick="closeModalOnBlank(event)">
+        <div class="bg-slate-900 border border-slate-700/80 p-6 rounded-2xl w-full max-w-sm shadow-2xl text-slate-100" onclick="event.stopPropagation()">
+            <h4 id="modal-title" class="text-md font-semibold text-slate-200 mb-4 flex items-center"><i class="fas fa-link mr-2 text-indigo-400"></i>添加自定义导航</h4>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-medium">网站名称</label>
+                    <input type="text" id="site-name" placeholder="例如：百度" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-medium">网站网址 (URL)</label>
+                    <input type="text" id="site-url" placeholder="www.baidu.com" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-all">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="toggleModal(false)" class="px-4 py-2 bg-slate-800 text-slate-400 text-xs font-medium rounded-xl hover:bg-slate-700 transition-colors cursor-pointer">取消</button>
+                <button type="button" onclick="saveActiveLink()" class="px-4 py-2 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:bg-indigo-500 transition-colors cursor-pointer shadow-lg shadow-indigo-600/20">保存站点</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局控制状态
+        let isCustomLinksExpanded = false;
+        let currentModalTarget = 'custom'; 
+
+        // --- 0. 隐蔽式轻量级后台管理员鉴权模块 ---
+        const ADMIN_PWD_HASH = "admin888"; 
+
+        function checkAdminSession() {
+            const isAdmin = localStorage.getItem('nav_admin_auth') === 'true';
+            if (isAdmin) {
+                document.body.classList.add('is-admin');
+                document.getElementById('admin-badge').classList.remove('hidden');
+            } else {
+                document.body.classList.remove('is-admin');
+                document.getElementById('admin-badge').classList.add('hidden');
+            }
+        }
+
+        function triggerAdminLogin() {
+            if (localStorage.getItem('nav_admin_auth') === 'true') {
+                alert("提示：您当前已处于后台管理模式，右上角调色盘已解锁专属壁纸修改权限。");
+                return;
+            }
+            const pwd = prompt("🔐 请输入后台管理员安全密码：");
+            if (pwd === null) return;
+            if (pwd === ADMIN_PWD_HASH) {
+                localStorage.setItem('nav_admin_auth', 'true');
+                alert("🎉 认证成功！管理功能已全部解锁。");
+                checkAdminSession();
+                loadCustomLinks();
+                loadFriendLinks();
+            } else {
+                alert("❌ 密码错误，鉴权失败！");
+            }
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('nav_admin_auth');
+            alert("🔒 已安全退出管理后台，页面回归只读状态。");
+            isCustomLinksExpanded = false; 
+            checkAdminSession();
+            loadCustomLinks();
+            loadFriendLinks();
+            document.getElementById('theme-panel').classList.add('hidden');
+        }
+
+        // --- 1. 跨会话本地持久化主题与自定义专属壁纸控制中心 ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('nav_theme_mode') || 'theme-dark';
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.body.classList.add(savedTheme);
+
+            const savedBg = localStorage.getItem('nav_custom_wallpaper');
+            if (savedBg) {
+                applyWallpaperStyles(savedBg);
+                document.getElementById('custom-bg-input').value = savedBg;
+                document.getElementById('clear-bg-btn').classList.remove('hidden');
+            }
+        }
+
+        function toggleThemeMenu(e) {
+            e.stopPropagation();
+            document.getElementById('theme-panel').classList.toggle('hidden');
+        }
+
+        function setBaseTheme(themeName) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.body.classList.add(themeName);
+            localStorage.setItem('nav_theme_mode', themeName);
+            document.getElementById('theme-panel').classList.add('hidden');
+        }
+
+        function applyCustomBg() {
+            const url = document.getElementById('custom-bg-input').value.trim();
+            if (!url) return alert('提示：请输入有效的背景图片 URL 网址！');
+
+            applyWallpaperStyles(url);
+            localStorage.setItem('nav_custom_wallpaper', url);
+            document.getElementById('clear-bg-btn').classList.remove('hidden');
+            document.getElementById('theme-panel').classList.add('hidden');
+        }
+
+        function applyWallpaperStyles(url) {
+            document.body.style.backgroundImage = `url('${url}')`;
+            document.body.style.backgroundPosition = 'center';
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundRepeat = 'no-repeat';
+            document.body.style.backgroundAttachment = 'fixed';
+            document.body.classList.add('has-custom-bg');
+        }
+
+        function clearCustomBg() {
+            document.body.style.backgroundImage = '';
+            document.body.classList.remove('has-custom-bg');
+            localStorage.removeItem('nav_custom_wallpaper');
+            document.getElementById('custom-bg-input').value = '';
+            document.getElementById('clear-bg-btn').classList.add('hidden');
+            document.getElementById('theme-panel').classList.add('hidden');
+        }
+
+        // --- 2. 智能华夏万年历节日与节气精准问候系统 ---
+        const sTermNames = ["小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪", "冬至"];
+        const sTermInfo = [0, 21208, 42467, 63836, 85337, 107014, 128867, 150921, 173149, 195551, 218072, 240693, 263343, 285989, 308563, 331033, 353350, 375494, 397447, 419210, 440795, 462224, 483532, 504758];
+
+        function getSolarTerm(y, m, d) {
+            const baseDate = new Date(1900, 0, 6, 2, 5, 0);
+            const termDate = new Date((31556925974.7 * (y - 1900) + sTermInfo[(m * 2)]) + baseDate.getTime());
+            if (termDate.getMonth() == m && termDate.getDate() == d) return sTermNames[m * 2];
+            const termDate2 = new Date((31556925974.7 * (y - 1900) + sTermInfo[(m * 2 + 1)]) + baseDate.getTime());
+            if (termDate2.getMonth() == m && termDate2.getDate() == d) return sTermNames[m * 2 + 1];
+            return null;
+        }
+
+        function getFestival(m, d) {
+            const md = `${String(m+1).padStart(2, '0')}${String(d).padStart(2, '0')}`;
+            const staticFests = {
+                "0101": "元旦快乐", "0308": "妇女节快乐", "0501": "五一劳动节",
+                "0601": "儿童节快乐", "1001": "国庆节快乐", "1225": "圣诞节"
+            };
+            return staticFests[md] || null;
+        }
+
+        function updateClockAndGreeting() {
+            const now = new Date();
+            const y = now.getFullYear(), m = now.getMonth(), d = now.getDate(), h = now.getHours();
+            
+            document.getElementById('clock').innerText = 
+                `${String(h).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+            let greetStr = "";
+            const term = getSolarTerm(y, m, d);
+            const fest = getFestival(m, d);
+
+            if (fest) greetStr = `🎉 今天是 ${fest}，祝你开心！`;
+            else if (term) greetStr = `🍃 今日节气 · 【${term}】，顺应四时，平安喜乐。`;
+            else {
+                if (h >= 0 && h < 5) greetStr = "🌙 夜深了，静谧的星空在守护你，早点休息哦";
+                else if (h >= 5 && h < 8) greetStr = "🌅 清晨的朝阳刚刚升起，新的一天充满希望";
+                else if (h >= 8 && h < 11.5) greetStr = "☀️ 早上好，专注当下，今天也要元气满满";
+                else if (h >= 11.5 && h < 13.5) greetStr = "🍲 中午好，记得按时吃饭，歇息一下双眼";
+                else if (h >= 13.5 && h < 17.5) greetStr = "☕ 下午好，来杯清茶或咖啡，继续保持高效";
+                else if (h >= 17.5 && h < 19.5) greetStr = "🌇 傍晚好，落日余晖很美，放下疲惫准备享受夜晚吧";
+                else greetStr = "✨ 晚上好，属于自己的惬意时光，好好犒劳一下自己";
+            }
+            document.getElementById('greeting').innerText = greetStr;
+        }
+        setInterval(updateClockAndGreeting, 1000);
+        updateClockAndGreeting();
+
+        // --- 3. 智能定位天气组件 ---
+        async function fetchWeather() {
+            const el = document.getElementById('weather-info');
+            try {
+                const ipRes = await fetch('https://ipapi.co/json/');
+                if(!ipRes.ok) throw new Error();
+                const ipData = await ipRes.json();
+                
+                const cityTranslation = {
+                    "Santa Clara": "圣克拉拉", "San Jose": "圣何塞", "Beijing": "北京",
+                    "Shanghai": "上海", "Shenzhen": "深圳", "Guangzhou": "广州",
+                    "Hangzhou": "杭州", "Chengdu": "成都", "Hong Kong": "香港"
+                };
+                
+                let rawCity = ipData.city || "华夏";
+                let chineseCity = cityTranslation[rawCity] || rawCity; 
+                chineseCity = chineseCity.replace(/Province|City/gi, "").trim();
+
+                const { latitude, longitude } = ipData;
+                if(!latitude || !longitude) throw new Error();
+
+                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+                const weatherData = await weatherRes.json();
+                
+                const temp = Math.round(weatherData.current_weather.temperature);
+                const code = weatherData.current_weather.weathercode;
+                
+                let icon = 'fa-cloud'; let desc = '多云';
+                if (code === 0) { icon = 'fa-sun text-amber-500'; desc = '晴朗'; }
+                else if ([1, 2, 3].includes(code)) { icon = 'fa-cloud-sun text-indigo-300'; desc = '多云'; }
+                else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) { icon = 'fa-cloud-showers-heavy text-sky-400'; desc = '阵雨'; }
+                else if ([71, 73, 75, 77, 85, 86].includes(code)) { icon = 'fa-snowflake text-blue-200'; desc = '降雪'; }
+                else if ([95, 96, 99].includes(code)) { icon = 'fa-bolt text-yellow-500'; desc = '雷阵雨'; }
+
+                el.innerHTML = `<i class="fas ${icon}"></i> <span>${chineseCity} · ${desc} ${temp}°C</span>`;
+            } catch (e) {
+                el.innerHTML = `<i class="fas fa-cloud text-slate-400"></i> <span>风调雨顺 · 晴 26°C</span>`;
+            }
+        }
+        fetchWeather();
+
+        // --- 4. 搜索引擎选择机制 ---
+        const engines = {
+            google: { action: 'https://www.google.com/search', name: 'q', placeholder: '在 Google 中搜索...', icon: 'fab fa-google text-blue-400' },
+            bing: { action: 'https://cn.bing.com/search', name: 'q', placeholder: '在 必应 Bing 中搜索...', icon: 'fab fa-microsoft text-teal-400' },
+            baidu: { action: 'https://www.baidu.com/s', name: 'wd', placeholder: '在 百度 Baidu 中搜索...', icon: 'fas fa-paw text-red-400' },
+            github: { action: 'https://github.com/search', name: 'q', placeholder: '在 GitHub 中搜索仓库...', icon: 'fab fa-github text-slate-400' }
+        };
+
+        function toggleEngineMenu(e) {
+            e.stopPropagation();
+            document.getElementById('engine-menu').classList.toggle('hidden');
+        }
+
+        function selectEngine(key) {
+            const form = document.getElementById('search-form');
+            const input = document.getElementById('search-input');
+            const icon = document.getElementById('engine-icon');
+            
+            form.action = engines[key].action;
+            input.name = engines[key].name;
+            input.placeholder = engines[key].placeholder;
+            icon.className = engines[key].icon;
+            
+            document.getElementById('engine-menu').classList.add('hidden');
+        }
+
+        // --- 5. 链接弹窗控制统筹 ---
+        function openLinkModal(target) {
+            currentModalTarget = target;
+            const modalTitle = document.getElementById('modal-title');
+            if(target === 'friend') {
+                modalTitle.innerHTML = `<i class="fas fa-handshake mr-2 text-emerald-400"></i>添加友情链接`;
+            } else {
+                modalTitle.innerHTML = `<i class="fas fa-link mr-2 text-pink-400"></i>添加自定义导航`;
+            }
+            toggleModal(true);
+        }
+
+        function toggleModal(show) {
+            const modal = document.getElementById('modal');
+            if (show) {
+                document.getElementById('site-name').value = '';
+                document.getElementById('site-url').value = '';
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function closeModalOnBlank(e) {
+            if(e.target.id === 'modal') toggleModal(false);
+        }
+
+        function saveActiveLink() {
+            const name = document.getElementById('site-name').value.trim();
+            let url = document.getElementById('site-url').value.trim();
+            
+            if(!name || !url) {
+                alert('提示：请完整填写网站名称和网址！');
+                return;
+            }
+            if(!/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+            }
+
+            if(currentModalTarget === 'friend') {
+                const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
+                links.push({ name, url });
+                localStorage.setItem('nav_friend_links', JSON.stringify(links));
+                loadFriendLinks();
+            } else {
+                const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
+                links.push({ name, url });
+                localStorage.setItem('nav_custom_links', JSON.stringify(links));
+                loadCustomLinks();
+            }
+            
+            toggleModal(false);
+        }
+
+        // --- 6. 自定义快捷链接动态折叠与升级网格排版系统 ---
+        function loadCustomLinks() {
+            const container = document.getElementById('custom-links-container');
+            const actionWrapper = document.getElementById('expand-action-wrapper');
+            const mainGrid = document.getElementById('main-nav-grid');
+            const customCard = document.getElementById('card-custom');
+            
+            const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
+            container.innerHTML = '';
+            
+            if(links.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400/60 py-10">暂无自定义链接</div>`;
+                actionWrapper.classList.add('hidden');
+                resetCustomLayout(mainGrid, customCard, container);
+                return;
+            }
+
+            // 三列拉伸切换
+            if (links.length > 6 && isCustomLinksExpanded) {
+                mainGrid.classList.remove('xl:grid-cols-3');
+                mainGrid.classList.add('xl:grid-cols-4');
+                customCard.classList.remove('xl:col-span-1');
+                customCard.classList.add('xl:col-span-2');
+                container.classList.remove('grid-cols-2');
+                container.classList.add('grid-cols-2', 'sm:grid-cols-3');
+            } else {
+                resetCustomLayout(mainGrid, customCard, container);
+            }
+
+            const shouldSlice = links.length > 6 && !isCustomLinksExpanded;
+            const visibleLinks = shouldSlice ? links.slice(0, 6) : links;
+
+            visibleLinks.forEach((item, index) => {
+                let displayIcon = `<div class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-bold shrink-0">${item.name.charAt(0).toUpperCase()}</div>`;
+                try {
+                    if(item.url) {
+                        const domain = new URL(item.url).hostname;
+                        displayIcon = `<img src="https://unavatar.io/duckduckgo/${domain}" onerror="this.style.display='none'" class="w-5 h-5 rounded object-contain shrink-0" alt="icon" />`;
+                    }
+                } catch(err){}
+
+                container.innerHTML += `
+                    <div class="group relative flex items-center justify-between p-3 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all">
+                        <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2.5 truncate w-full pr-5">
+                            ${displayIcon}
+                            <span class="text-sm font-medium truncate">${item.name}</span>
+                        </a>
+                        <button type="button" aria-label="删除链接" onclick="deleteCustomLink(event, ${index})" class="admin-only absolute right-2 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-slate-500/20 p-1 rounded cursor-pointer">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            if (links.length > 6) {
+                actionWrapper.classList.remove('hidden');
+                const btn = document.getElementById('expand-btn');
+                if (isCustomLinksExpanded) {
+                    btn.innerHTML = `<span>收起部分站点</span> <i class="fas fa-chevron-up text-[10px]"></i>`;
+                } else {
+                    btn.innerHTML = `<span>展开显示更多 (${links.length - 6}个)</span> <i class="fas fa-chevron-down text-[10px]"></i>`;
+                }
+            } else {
+                actionWrapper.classList.add('hidden');
+            }
+        }
+
+        function resetCustomLayout(mainGrid, customCard, container) {
+            mainGrid.classList.remove('xl:grid-cols-4');
+            mainGrid.classList.add('xl:grid-cols-3');
+            customCard.classList.remove('xl:col-span-2');
+            customCard.classList.add('xl:col-span-1');
+            container.classList.remove('sm:grid-cols-3');
+            container.classList.add('grid-cols-2');
+        }
+
+        function toggleExpandCustomLinks() {
+            isCustomLinksExpanded = !isCustomLinksExpanded;
+            loadCustomLinks();
+        }
+
+        function deleteCustomLink(e, index) {
+            e.preventDefault();
+            e.stopPropagation();
+            const links = JSON.parse(localStorage.getItem('nav_custom_links') || '[]');
+            links.splice(index, 1);
+            localStorage.setItem('nav_custom_links', JSON.stringify(links));
+            if(links.length <= 6) isCustomLinksExpanded = false;
+            loadCustomLinks();
+        }
+
+        // --- 7. 友情链接加载与管理模块 ---
+        function loadFriendLinks() {
+            const container = document.getElementById('friend-links-container');
+            const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
+            container.innerHTML = '';
+            
+            if(links.length === 0) {
+                const defaultFriends = [
+                    { name: "IT头条博客", url: "https://it-toutiao.blogspot.com" },
+                    { name: "科技共享导航", url: "https://kjgx.168668520.xyz" }
+                ];
+                localStorage.setItem('nav_friend_links', JSON.stringify(defaultFriends));
+                return loadFriendLinks();
+            }
+
+            links.forEach((item, index) => {
+                container.innerHTML += `
+                    <div class="group relative flex items-center justify-between p-2.5 bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-emerald-600/10 transition-all text-center">
+                        <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="w-full text-xs font-medium text-slate-400 hover:text-emerald-400 transition-colors truncate px-2">
+                            ${item.name}
+                        </a>
+                        <button type="button" aria-label="删除友链" onclick="deleteFriendLink(event, ${index})" class="admin-only absolute right-1 text-[10px] text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-500/10 px-1 rounded cursor-pointer">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteFriendLink(e, index) {
+            e.preventDefault();
+            e.stopPropagation();
+            const links = JSON.parse(localStorage.getItem('nav_friend_links') || '[]');
+            links.splice(index, 1);
+            localStorage.setItem('nav_friend_links', JSON.stringify(links));
+            loadFriendLinks();
+        }
+
+        // 全局空白点击自动收起下拉窗与控制面板
+        document.addEventListener('click', () => {
+            document.getElementById('engine-menu').classList.add('hidden');
+            document.getElementById('theme-panel').classList.add('hidden');
+        });
+
+        // 页面总初始化入口
+        checkAdminSession();
+        initTheme();
+        loadCustomLinks();
+        loadFriendLinks();
+    </script>
+</body>
+</html>
