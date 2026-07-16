@@ -78,6 +78,9 @@
 
 你会看到一段类似于这样的代码：
 
+
 JSON
 {"wallpaper":"xxx","dynamicSections":[],"adminPwd":"你忘记的那个密码"}
+
+
 👉 "adminPwd" 后面的内容就是你的当前密码！ 看完记住它，直接回去登录就行了。
