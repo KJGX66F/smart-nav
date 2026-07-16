@@ -64,7 +64,20 @@
 ## ⚙️ 进阶配置说明
 
 ### 1. 修改管理员密码
-默认的后台管理密码是 `admin888`。
-如需修改，请用文本编辑器打开 `index.html`，搜索 `ADMIN_PWD_HASH` 并将其修改为你自己的密码：
-```javascript
-const ADMIN_PWD_HASH = "你的新密码";
+默认的后台管理密码是 `admin888`。登录后可自行修改
+如忘记密码
+登录 Cloudflare 控制面板。
+
+在左侧菜单栏点击 Workers & Pages -> 然后点击下拉菜单里的 KV。
+
+在右侧的列表中，找到你之前创建的那个数据库名称（比如 NAV_DATABASE），点击它进入查看。
+
+在下方的数据列表里，你会看到一个名为 site_config 的键（Key）。
+
+点击这个键右侧的 “查看” (View) 或 “编辑” (Edit)。
+
+你会看到一段类似于这样的代码：
+
+JSON
+{"wallpaper":"xxx","dynamicSections":[],"adminPwd":"你忘记的那个密码"}
+👉 "adminPwd" 后面的内容就是你的当前密码！ 看完记住它，直接回去登录就行了。
