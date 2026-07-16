@@ -114,9 +114,18 @@
                     <button onclick="applyCustomBg()" class="bg-indigo-600 text-white px-2 py-1 rounded-lg text-xs hover:bg-indigo-500 cursor-pointer shrink-0" data-i18n="applyBtn">应用</button>
                 </div>
             </div>
+            
+            <!-- 【新增】修改管理员密码区域 (仅管理员可见) -->
+            <div class="admin-only space-y-1.5 px-1 border-t border-slate-800 pt-3 mt-1">
+                <label class="text-[11px] text-slate-400 font-bold" data-i18n="pwdTitle">修改管理员密码 (全站同步)</label>
+                <div class="flex gap-1.5">
+                    <input type="password" id="custom-pwd-input" data-i18n-placeholder="pwdInputPlace" placeholder="输入新密码" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                    <button onclick="updateAdminPwd()" class="bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs hover:bg-emerald-500 cursor-pointer shrink-0" data-i18n="saveBtn">保存</button>
+                </div>
+            </div>
 
-            <div class="admin-only border-t border-slate-800 pt-2 mt-1">
-                <button onclick="logoutAdmin()" class="w-full py-1 rounded-lg bg-red-950/40 border border-red-900/40 text-red-400 text-[11px] text-center hover:bg-red-900/40 transition-colors cursor-pointer" data-i18n="logoutBtn">退出后台管理</button>
+            <div class="admin-only border-t border-slate-800 pt-2 mt-2">
+                <button onclick="logoutAdmin()" class="w-full py-1.5 rounded-lg bg-red-950/40 border border-red-900/40 text-red-400 text-[11px] text-center hover:bg-red-900/40 transition-colors cursor-pointer" data-i18n="logoutBtn">退出后台管理</button>
             </div>
         </div>
     </div>
@@ -186,7 +195,6 @@
                 </div>
             </div>
 
-            <!-- 系统自带的站长推荐 -->
             <div id="card-custom" class="glass-card rounded-2xl p-6 shadow-xl hover:border-pink-500/30 transition-all duration-300 xl:col-span-1">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold text-pink-400 flex items-center"><i class="fas fa-folder-plus mr-2.5"></i> <span data-i18n="cardCustom">站长推荐</span></h3>
@@ -252,7 +260,8 @@
         let currentModalTarget = 'custom'; 
         let currentEngineKey = 'google';
         
-        let cloudConfig = { wallpaper: "", dynamicSections: [] };
+        // 全局云端配置中心：整合了壁纸、分类区域 和 【新增】管理员密码
+        let cloudConfig = { wallpaper: "", dynamicSections: [], adminPwd: "" };
 
         let dragType = null; 
         let dragSecId = null; 
@@ -273,7 +282,8 @@
                 delConfirm: "确定要删除这个链接吗？", pwdPrompt: "🔐 请输入后台管理员安全密码：", pwdSuccess: "🎉 认证成功！管理功能已全部解锁。", pwdFail: "❌ 密码错误，鉴权失败！", logoutMsg: "🔒 已安全退出管理后台，页面回归只读状态。",
                 weatherCloudy: "多云", weatherClear: "晴朗", weatherRain: "阵雨", weatherSnow: "降雪", weatherThunder: "雷阵雨", weatherDefault: "风调雨顺 · 晴", validUrlMsg: "提示：请输入有效的网址！",
                 addSectionBtn: "添加自定义区域", promptSectionName: "请输入新区域的名称 (例如：AI工具)：", delSectionConfirm: "确定要删除整个区域及其所有链接吗？", modalAddSection: "添加到自定义区域",
-                renameSectionPrompt: "请输入新的区域名称："
+                renameSectionPrompt: "请输入新的区域名称：",
+                pwdTitle: "修改管理员密码 (全站同步)", pwdInputPlace: "输入新密码", saveBtn: "保存", pwdUpdateSuccess: "管理员密码修改成功！下次登录生效。"
             },
             en: {
                 pageTitle: "TechShare - Smart Responsive Nav", langTitle: "Language / 语言", themeTitle: "Color Theme (Local Pref)",
@@ -289,7 +299,8 @@
                 delConfirm: "Are you sure you want to delete this link?", pwdPrompt: "🔐 Enter Admin Password:", pwdSuccess: "🎉 Authenticated! Admin features unlocked.", pwdFail: "❌ Incorrect password!", logoutMsg: "🔒 Logged out safely. Read-only mode activated.",
                 weatherCloudy: "Cloudy", weatherClear: "Clear", weatherRain: "Rain", weatherSnow: "Snow", weatherThunder: "Thunder", weatherDefault: "Good Weather · Clear", validUrlMsg: "Please enter a valid URL!",
                 addSectionBtn: "Add Custom Section", promptSectionName: "Enter new section name (e.g., AI Tools):", delSectionConfirm: "Are you sure you want to delete this entire section?", modalAddSection: "Add to Custom Section",
-                renameSectionPrompt: "Enter new section name:"
+                renameSectionPrompt: "Enter new section name:",
+                pwdTitle: "Change Admin Password (Cloud Sync)", pwdInputPlace: "Enter new password", saveBtn: "Save", pwdUpdateSuccess: "Admin password updated successfully! Valid on next login."
             }
         };
 
@@ -315,28 +326,51 @@
             loadCustomLinks(); loadFriendLinks(); renderDynamicSections();
         }
 
-        // --- 1. 管理员鉴权 ---
-        const ADMIN_PWD_HASH = "admin888"; 
+        // --- 1. 管理员鉴权 (动态密码校验) ---
         function checkAdminSession() {
             const isAdmin = localStorage.getItem('nav_admin_auth') === 'true';
             if (isAdmin) { document.body.classList.add('is-admin'); document.getElementById('admin-badge').classList.remove('hidden'); } 
             else { document.body.classList.remove('is-admin'); document.getElementById('admin-badge').classList.add('hidden'); }
         }
+        
         function triggerAdminLogin() {
             if (localStorage.getItem('nav_admin_auth') === 'true') { alert(currentLang === 'zh' ? "提示：您已处于后台管理模式。" : "Notice: You are already in admin mode."); return; }
             const pwd = prompt(t('pwdPrompt'));
             if (pwd === null) return;
-            if (pwd === ADMIN_PWD_HASH) { localStorage.setItem('nav_admin_auth', 'true'); alert(t('pwdSuccess')); checkAdminSession(); } 
+            
+            // 【关键】：校验密码时优先使用云端配置，如果没有则使用初始密码 admin888
+            const currentValidPwd = cloudConfig.adminPwd || "admin888";
+            
+            if (pwd === currentValidPwd) { 
+                localStorage.setItem('nav_admin_auth', 'true'); alert(t('pwdSuccess')); checkAdminSession(); 
+            } 
             else { alert(t('pwdFail')); }
         }
+        
         function logoutAdmin() {
             localStorage.removeItem('nav_admin_auth'); alert(t('logoutMsg'));
             isCustomLinksExpanded = false; expandedDynamicSections = {}; checkAdminSession(); document.getElementById('theme-panel').classList.add('hidden');
         }
 
+        // 【新增】：修改并同步管理员密码
+        async function updateAdminPwd() {
+            const newPwd = document.getElementById('custom-pwd-input').value.trim();
+            if (!newPwd) return;
+            cloudConfig.adminPwd = newPwd;
+            document.getElementById('custom-pwd-input').value = '';
+            document.getElementById('theme-panel').classList.add('hidden');
+            
+            try { 
+                await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cloudConfig) }); 
+                alert(t('pwdUpdateSuccess'));
+            } catch (e) { 
+                console.error("云端密码同步失败", e); 
+            }
+        }
+
         // --- 2. 拖拽核心控制逻辑 ---
         function handleDragStart(e, type, secId, linkIdx = null) {
-            e.stopPropagation(); // 切断事件冒泡，防止网址拖拽触发整个区域的拖拽
+            e.stopPropagation(); 
             if (localStorage.getItem('nav_admin_auth') !== 'true') { e.preventDefault(); return; }
             dragType = type; dragSecId = secId; dragLinkIdx = linkIdx;
             e.dataTransfer.effectAllowed = 'move';
@@ -345,14 +379,14 @@
         }
 
         function handleDragEnd(e) {
-            e.stopPropagation(); // 切断事件冒泡
+            e.stopPropagation(); 
             e.currentTarget.classList.remove('dragging');
             document.querySelectorAll('.dynamic-section-card, .group').forEach(el => el.style.border = '');
         }
 
         function handleDragOver(e, type) { 
             e.preventDefault(); 
-            e.stopPropagation(); // 切断事件冒泡
+            e.stopPropagation(); 
             e.dataTransfer.dropEffect = 'move'; 
             return false; 
         }
@@ -379,7 +413,6 @@
                 const toSec = secs.find(s => s.id === targetSecId);
                 if (fromSec && toSec) {
                     let actualTargetIdx = targetLinkIdx;
-                    // 同区域内往下拖动时，由于前置元素已被抽出，不需要额外处理 index
                     const [movedLink] = fromSec.links.splice(dragLinkIdx, 1);
                     toSec.links.splice(actualTargetIdx, 0, movedLink);
                 }
@@ -388,7 +421,7 @@
                  const fromSec = secs.find(s => s.id === dragSecId);
                  const toSec = secs.find(s => s.id === targetSecId);
                  if (fromSec && toSec) {
-                     if (fromSec === toSec) return; // 防止在同区域误拖拽导致排到最后
+                     if (fromSec === toSec) return; 
                      const [movedLink] = fromSec.links.splice(dragLinkIdx, 1);
                      toSec.links.push(movedLink);
                  }
@@ -396,7 +429,7 @@
             saveDynamicSections(secs);
         }
 
-        // --- 3. 云端调度器 ---
+        // --- 3. 云端调度器 (新增 adminPwd 同步) ---
         async function initCloudData() {
             const savedTheme = localStorage.getItem('nav_theme_mode') || 'theme-dark';
             document.body.classList.remove('theme-light', 'theme-dark'); document.body.classList.add(savedTheme);
@@ -414,6 +447,7 @@
                             else { savedBg = configData.wallpaper; localStorage.setItem('nav_custom_wallpaper', savedBg); document.body.classList.remove('bg-cleared'); }
                         }
                         if (configData.dynamicSections) { cloudConfig.dynamicSections = configData.dynamicSections; localStorage.setItem('nav_dynamic_sections', JSON.stringify(cloudConfig.dynamicSections)); }
+                        if (configData.adminPwd) { cloudConfig.adminPwd = configData.adminPwd; }
                     }
                 }
             } catch (e) {}
@@ -528,9 +562,7 @@
                     visibleLinks.forEach((link, idx) => {
                         const displayName = getLocalizedLinkName(link.name, link.url);
                         let displayIcon = `<div class="${iconSizeClass} rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
-                        try { 
-                            if(link.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(link.url).hostname}" draggable="false" onerror="this.style.display='none'" class="${imgSizeClass} rounded object-contain shrink-0" alt="icon" />`; 
-                        } catch(e){}
+                        try { if(link.url) displayIcon = `<img src="https://unavatar.io/duckduckgo/${new URL(link.url).hostname}" draggable="false" onerror="this.style.display='none'" class="${imgSizeClass} rounded object-contain shrink-0" alt="icon" />`; } catch(e){}
 
                         linksHtml += `
                         <div class="group relative flex items-center justify-between ${pClass} bg-slate-500/5 border border-slate-500/10 rounded-xl hover:bg-indigo-600/10 transition-all"
@@ -541,7 +573,6 @@
                              ondrop="handleDrop(event, 'link', '${sec.id}', ${idx})">
                             <div class="flex items-center w-full overflow-hidden">
                                 <i class="fas fa-grip-vertical text-slate-500 opacity-0 group-hover:opacity-50 transition-opacity ${dragMrClass} cursor-move admin-only text-[10px] shrink-0"></i>
-                                <!-- 增加 draggable="false" 阻止浏览器默认的超链接拖拽 -->
                                 <a href="${link.url}" draggable="false" target="_blank" rel="noopener noreferrer" class="flex items-center ${spaceXClass} truncate w-full ${prClass}">
                                     ${displayIcon} <span class="${textSizeClass} font-medium truncate">${displayName}</span>
                                 </a>
