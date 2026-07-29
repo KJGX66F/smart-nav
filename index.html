@@ -7,7 +7,7 @@
     <meta name="description" content="科技共享-智能多功能响应式导航。提供高效的搜索、云端自定义网址管理、动态天气与专属壁纸等个性化功能。">
     <meta name="keywords" content="网址导航, 科技共享, 开发者导航, 智能导航, 响应式网站, 云端同步">
     
-    <title id="page-title">科技共享-智能多功能响应式导航</title>
+    <title id="page-title">Reyes导航</title>
     
     <!-- 性能优化：DNS 预解析与预连接 -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
@@ -740,7 +740,7 @@
 
         function loadFriendLinks() {
             const container = document.getElementById('friend-links-container'); let linksStr = localStorage.getItem('nav_friend_links'); let links = linksStr ? JSON.parse(linksStr) : []; container.innerHTML = '';
-            if(links.length === 0) { links = [ { name: "IT头条博客", url: "https://it-toutiao.blogspot.com" }, { name: "科技共享导航", url: "https://kjgx.168668520.xyz" } ]; }
+            if(links.length === 0) { links = [ { name: "", url: "" }, { name: "", url: "" } ]; }
             links.forEach((item, index) => {
                 const displayName = getLocalizedLinkName(item.name, item.url);
                 container.innerHTML += `
